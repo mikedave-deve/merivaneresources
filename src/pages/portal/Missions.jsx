@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Icon from "../../components/Icon";
 import Badge from "../../components/ui/Badge";
 import { PageHeader, SectionCard, ProgressBar } from "../../components/portal/PortalPrimitives";
-import { MISSIONS, MISSION_STATUS_TONE } from "../../data/portal";
+import { MISSION_STATUS_TONE } from "../../data/portal";
 import { cx } from "../../lib/utils";
 
 const PRIORITY_TONE = { High: "brass", Medium: "linen", Low: "linen" };
@@ -10,7 +10,19 @@ const FILTERS = ["All", "Not Started", "In Progress", "In Review", "Completed"];
 
 export default function Missions() {
   const [filter, setFilter] = useState("All");
-  const shown = filter === "All" ? MISSIONS : MISSIONS.filter((m) => m.status === filter);
+  const [missions, setMissions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/portal/missions")
+      .then((res) => res.json())
+      .then((data) => { if (!cancelled) setMissions(data.missions || []); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const shown = filter === "All" ? missions : missions.filter((m) => m.status === filter);
 
   return (
     <div>
@@ -31,28 +43,35 @@ export default function Missions() {
         ))}
       </div>
 
-      <div className="space-y-4">
-        {shown.map((m) => (
-          <SectionCard key={m.id}>
-            <div className="flex flex-wrap items-start justify-between gap-3 mb-2">
-              <h3 className="font-display font-semibold text-ink">{m.title}</h3>
-              <div className="flex items-center gap-2 shrink-0">
-                <Badge tone={PRIORITY_TONE[m.priority]}>{m.priority} priority</Badge>
-                <Badge tone={MISSION_STATUS_TONE[m.status]}>{m.status}</Badge>
+      {loading ? (
+        <p className="text-sm text-slateSoft">Loading…</p>
+      ) : shown.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-ink/15 py-16 text-center">
+          <p className="text-sm text-slateSoft">No missions here yet.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {shown.map((m) => (
+            <SectionCard key={m.id}>
+              <div className="flex flex-wrap items-start justify-between gap-3 mb-2">
+                <h3 className="font-display font-semibold text-ink">{m.title}</h3>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Badge tone={PRIORITY_TONE[m.priority]}>{m.priority} priority</Badge>
+                  <Badge tone={MISSION_STATUS_TONE[m.status]}>{m.status}</Badge>
+                </div>
               </div>
-            </div>
-            <p className="text-sm text-slateSoft leading-relaxed mb-4">{m.instructions}</p>
-            <div className="flex items-center gap-4">
-              <div className="flex-1"><ProgressBar pct={m.progress} tone={m.status === "Completed" ? "moss" : "brass"} /></div>
-              <span className="text-xs font-mono text-slateSoft w-10 text-right shrink-0">{m.progress}%</span>
-            </div>
-            <div className="flex items-center justify-between mt-4">
-              <div className="flex items-center gap-1.5 text-xs text-slateSoft font-mono"><Icon name="calendar" size={13} />Due {m.dueDate}</div>
-              <button className="text-xs font-mono text-brass hover:underline">Open mission</button>
-            </div>
-          </SectionCard>
-        ))}
-      </div>
+              <p className="text-sm text-slateSoft leading-relaxed mb-4">{m.instructions}</p>
+              <div className="flex items-center gap-4">
+                <div className="flex-1"><ProgressBar pct={m.progress} tone={m.status === "Completed" ? "moss" : "brass"} /></div>
+                <span className="text-xs font-mono text-slateSoft w-10 text-right shrink-0">{m.progress}%</span>
+              </div>
+              <div className="flex items-center justify-between mt-4">
+                <div className="flex items-center gap-1.5 text-xs text-slateSoft font-mono"><Icon name="calendar" size={13} />Due {m.dueDate || "—"}</div>
+              </div>
+            </SectionCard>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -188,4 +188,4 @@ export const NOTIFICATIONS = [
   { icon: "message", title: "Merivane Resources", preview: "Your weekly roster digest: 12 new remote roles this week.", time: "1d ago", unread: false, type: "Announcement" },
 ];
 
-export const NOTIFICATION_TONE = { Message: "brass", Payroll: "moss", Mission: "moss", Compliance: "linen", Equipment: "linen", Announcement: "linen" };
+export const NOTIFICATION_TONE = { Message: "brass", Payroll: "moss", Mission: "moss", Compliance: "linen", Equipment: "linen", Announcement: "linen", Profile: "linen", "Time Off": "moss" };

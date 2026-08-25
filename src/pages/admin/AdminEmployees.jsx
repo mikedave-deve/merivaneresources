@@ -1,104 +1,24 @@
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Logo from "../../components/Logo";
 import Icon from "../../components/Icon";
 import { PrimaryButton, GhostButton } from "../../components/ui/Buttons";
 import { useApp } from "../../context/AppContext";
 import { cx } from "../../lib/utils";
+import EmployeesPanel from "./EmployeesPanel";
+import TimeOffPanel from "./TimeOffPanel";
+import MissionsPanel from "./MissionsPanel";
 
-const TABS = [
-  { id: "pending", label: "Pending" },
-  { id: "approved", label: "Approved" },
-  { id: "rejected", label: "Rejected" },
-  { id: "all", label: "All" },
+const SECTIONS = [
+  { id: "employees", label: "Employees", subtitle: "Review new employee registrations before they can sign in to the portal." },
+  { id: "timeoff", label: "Time Off", subtitle: "Approve or deny time off requests from employees." },
+  { id: "missions", label: "Missions", subtitle: "Send instructions and manage priority for each employee." },
 ];
-
-const STATUS_STYLE = {
-  pending: "bg-brass/10 text-brass",
-  approved: "bg-moss/10 text-moss",
-  rejected: "bg-red-50 text-red-600",
-};
-
-function formatDate(value) {
-  if (!value) return "—";
-  return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
-
-function EmployeeCard({ employee, onDecision, busy }) {
-  return (
-    <div className="rounded-2xl bg-white border border-ink/8 shadow-card p-5 flex flex-col sm:flex-row sm:items-center gap-4">
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-medium text-ink">{employee.name}</span>
-          <span className={cx("text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full", STATUS_STYLE[employee.status])}>
-            {employee.status}
-          </span>
-        </div>
-        <div className="text-sm text-slateSoft mt-1 truncate">{employee.email}</div>
-        <div className="text-xs text-slateSoft/80 mt-1 flex flex-wrap gap-x-4 gap-y-1">
-          <span>{employee.phone || "No phone"}</span>
-          <span>Registered {formatDate(employee.createdAt)}</span>
-        </div>
-      </div>
-      {employee.status === "pending" && (
-        <div className="flex gap-2 shrink-0">
-          <PrimaryButton icon={null} onClick={() => onDecision(employee.id, "approve")} className={cx("!px-4 !py-2 !text-xs", busy && "opacity-50 pointer-events-none")}>
-            Approve
-          </PrimaryButton>
-          <GhostButton icon={null} onClick={() => onDecision(employee.id, "reject")} className={cx("!px-4 !py-2 !text-xs !text-red-600 !border-red-200 hover:!bg-red-50", busy && "opacity-50 pointer-events-none")}>
-            Reject
-          </GhostButton>
-        </div>
-      )}
-    </div>
-  );
-}
 
 export default function AdminEmployees() {
   const navigate = useNavigate();
   const { user, isAdmin, authLoading, logout } = useApp();
-  const [tab, setTab] = useState("pending");
-  const [employees, setEmployees] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [busyId, setBusyId] = useState(null);
-
-  const load = useCallback(async (status) => {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await fetch(`/api/admin/employees?status=${status}`);
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Failed to load employees.");
-      setEmployees(data.employees || []);
-    } catch (err) {
-      setError(err.message || "Failed to load employees.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isAdmin) load(tab);
-  }, [isAdmin, tab, load]);
-
-  const handleDecision = async (id, action) => {
-    setBusyId(id);
-    try {
-      const res = await fetch(`/api/admin/employees/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Something went wrong.");
-      setEmployees((list) => list.filter((e) => e.id !== id));
-    } catch (err) {
-      setError(err.message || "Something went wrong.");
-    } finally {
-      setBusyId(null);
-    }
-  };
+  const [section, setSection] = useState("employees");
 
   if (authLoading) return null;
 
@@ -108,7 +28,7 @@ export default function AdminEmployees() {
         <div className="max-w-lg mx-auto px-5 py-28 text-center">
           <div className="h-14 w-14 rounded-full bg-linen2 flex items-center justify-center mx-auto mb-6"><Icon name="lock" size={22} className="text-ink" /></div>
           <h1 className="font-display text-3xl font-semibold text-ink">Admin sign-in required</h1>
-          <p className="text-slateSoft mt-3 leading-relaxed">Sign in with an admin account to review employee registrations.</p>
+          <p className="text-slateSoft mt-3 leading-relaxed">Sign in with an admin account to manage employees.</p>
           <PrimaryButton onClick={() => navigate("/login")} className="mt-8">Sign In</PrimaryButton>
         </div>
       </div>
@@ -128,6 +48,8 @@ export default function AdminEmployees() {
     );
   }
 
+  const active = SECTIONS.find((s) => s.id === section);
+
   return (
     <div className="min-h-screen bg-linen">
       <div className="sticky top-0 z-10 bg-linen/90 backdrop-blur border-b border-ink/8">
@@ -144,39 +66,27 @@ export default function AdminEmployees() {
 
       <div className="max-w-5xl mx-auto px-5 sm:px-8 py-12">
         <p className="font-mono text-xs uppercase tracking-widest text-brass mb-2">Admin</p>
-        <h1 className="font-display text-3xl sm:text-4xl font-semibold text-ink leading-tight">Employee approvals</h1>
-        <p className="text-slateSoft mt-3 leading-relaxed max-w-xl">Review new employee registrations before they can sign in to the portal.</p>
+        <h1 className="font-display text-3xl sm:text-4xl font-semibold text-ink leading-tight">{active.label}</h1>
+        <p className="text-slateSoft mt-3 leading-relaxed max-w-xl">{active.subtitle}</p>
 
-        <div className="flex gap-2 mt-8 border-b border-ink/8">
-          {TABS.map((t) => (
+        <div className="flex gap-2 mt-8">
+          {SECTIONS.map((s) => (
             <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
+              key={s.id}
+              onClick={() => setSection(s.id)}
               className={cx(
-                "px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors",
-                tab === t.id ? "border-brass text-ink" : "border-transparent text-slateSoft hover:text-ink"
+                "px-4 py-2 rounded-full text-sm font-medium transition-colors",
+                section === s.id ? "bg-ink text-linen" : "bg-white border border-ink/12 text-slateSoft hover:text-ink"
               )}
             >
-              {t.label}
+              {s.label}
             </button>
           ))}
         </div>
 
-        {error && <p className="text-sm text-red-600 mt-6 flex items-center gap-1.5"><Icon name="alert" size={14} />{error}</p>}
-
-        <div className="mt-6 space-y-3">
-          {loading ? (
-            <p className="text-sm text-slateSoft">Loading…</p>
-          ) : employees.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-ink/15 py-16 text-center">
-              <p className="text-sm text-slateSoft">No {tab === "all" ? "" : tab} employees to show.</p>
-            </div>
-          ) : (
-            employees.map((employee) => (
-              <EmployeeCard key={employee.id} employee={employee} onDecision={handleDecision} busy={busyId === employee.id} />
-            ))
-          )}
-        </div>
+        {section === "employees" && <EmployeesPanel />}
+        {section === "timeoff" && <TimeOffPanel />}
+        {section === "missions" && <MissionsPanel />}
       </div>
     </div>
   );
