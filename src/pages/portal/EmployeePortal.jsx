@@ -2,28 +2,38 @@ import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import Logo from "../../components/Logo";
 import Icon from "../../components/Icon";
-import { PrimaryButton, GhostButton } from "../../components/ui/Buttons";
+import { PrimaryButton } from "../../components/ui/Buttons";
 import { useApp } from "../../context/AppContext";
-import { PORTAL_NAV, PORTAL_SUPPORT_NAV, EMPLOYEE, NOTIFICATIONS } from "../../data/portal";
+import { PORTAL_NAV, PORTAL_SUPPORT_NAV, NOTIFICATIONS } from "../../data/portal";
 import { cx } from "../../lib/utils";
+
+function initials(name) {
+  return (name || "")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join("");
+}
 
 export default function EmployeePortal() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthed, login, logout } = useApp();
+  const { user, authLoading, logout } = useApp();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  if (!isAuthed) {
+  if (authLoading) return null;
+
+  if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="max-w-lg mx-auto px-5 py-28 text-center">
           <div className="h-14 w-14 rounded-full bg-linen2 flex items-center justify-center mx-auto mb-6"><Icon name="lock" size={22} className="text-ink" /></div>
           <h1 className="font-display text-3xl font-semibold text-ink">This portal is for signed-in employees</h1>
-          <p className="text-slateSoft mt-3 leading-relaxed">Sign in to view your dashboard, missions, payroll, and benefits — or take a quick look at a demo account.</p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
+          <p className="text-slateSoft mt-3 leading-relaxed">Sign in to view your dashboard, missions, payroll, and benefits.</p>
+          <div className="flex justify-center mt-8">
             <PrimaryButton onClick={() => navigate("/login")}>Sign In</PrimaryButton>
-            <GhostButton onClick={login}>View Demo Portal</GhostButton>
           </div>
         </div>
       </div>
@@ -97,8 +107,8 @@ export default function EmployeePortal() {
             </button>
             <div className="relative">
               <button onClick={() => setMenuOpen((o) => !o)} className="flex items-center gap-2">
-                <img src={EMPLOYEE.avatar} className="h-8 w-8 rounded-full object-cover" alt={EMPLOYEE.name} />
-                <span className="hidden sm:block text-sm font-medium text-ink">{EMPLOYEE.name}</span>
+                <span className="h-8 w-8 rounded-full bg-ink text-linen flex items-center justify-center text-xs font-semibold font-mono">{initials(user.name)}</span>
+                <span className="hidden sm:block text-sm font-medium text-ink">{user.name}</span>
                 <Icon name="chevronDown" size={14} className={cx("hidden sm:block text-slateSoft transition-transform", menuOpen && "rotate-180")} />
               </button>
               {menuOpen && (
@@ -106,8 +116,8 @@ export default function EmployeePortal() {
                   <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
                   <div className="absolute right-0 top-full mt-2 w-60 rounded-2xl bg-white border border-ink/10 shadow-panel py-2 z-20">
                     <div className="px-4 py-3 border-b border-ink/8">
-                      <div className="text-sm font-medium text-ink truncate">{EMPLOYEE.name}</div>
-                      <div className="text-xs text-slateSoft truncate">{EMPLOYEE.email}</div>
+                      <div className="text-sm font-medium text-ink truncate">{user.name}</div>
+                      <div className="text-xs text-slateSoft truncate">{user.email}</div>
                     </div>
                     <button onClick={() => { navigate("/portal/profile"); setMenuOpen(false); }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-inkText/85 hover:bg-linen2/60 transition-colors">
                       <Icon name="user" size={15} />View Profile

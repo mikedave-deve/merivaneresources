@@ -1,5 +1,5 @@
-import { getDb } from "./lib/mongodb.js";
-import { sendResumeNotification } from "./lib/email.js";
+import { getDb } from "../lib/mongodb.js";
+import { sendResumeNotification } from "../lib/email.js";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_FIELD_LENGTH = 4000;

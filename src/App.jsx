@@ -16,6 +16,8 @@ import SubmitResume from "./pages/SubmitResume";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import AdminEmployees from "./pages/admin/AdminEmployees";
 
 import EmployeePortal from "./pages/portal/EmployeePortal";
 import Dashboard from "./pages/portal/Dashboard";
@@ -44,15 +46,16 @@ function ScrollToTop() {
 }
 
 export default function App() {
-  const { isAuthed } = useApp();
-  const { pathname } = useLocation();
-  const isPortal = pathname.startsWith("/portal");
-  const isAuthPage = ["/login", "/register", "/forgot-password"].includes(pathname);
+  const { isAuthed, isAdmin } = useApp();
+  const location = useLocation();
+  const { pathname } = location;
+  const isPortal = pathname.startsWith("/portal") || pathname.startsWith("/admin");
+  const isAuthPage = ["/login", "/register", "/forgot-password", "/reset-password"].includes(pathname);
 
   return (
     <div className="min-h-screen flex flex-col">
       <ScrollToTop />
-      {!isAuthPage && !isPortal && <Header isAuthed={isAuthed} />}
+      {!isAuthPage && !isPortal && <Header isAuthed={isAuthed} isAdmin={isAdmin} />}
       {!isPortal && !isAuthPage && <RoleTicker />}
       <main className="flex-1">
         <AnimatePresence mode="wait">
@@ -63,7 +66,7 @@ export default function App() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
           >
-            <Routes location={pathname}>
+            <Routes location={location}>
               <Route path="/" element={<Home />} />
               <Route path="/about" element={<About />} />
               <Route path="/jobs" element={<Jobs />} />
@@ -72,6 +75,8 @@ export default function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/admin" element={<AdminEmployees />} />
               <Route path="/portal" element={<EmployeePortal />}>
                 <Route index element={<Navigate to="/portal/dashboard" replace />} />
                 <Route path="dashboard" element={<Dashboard />} />

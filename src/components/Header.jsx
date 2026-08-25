@@ -14,10 +14,11 @@ const NAV_LINKS = [
   { label: "Submit Resume", href: "/submit-resume" },
 ];
 
-export default function Header({ isAuthed }) {
+export default function Header({ isAuthed, isAdmin }) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const portalPath = isAdmin ? "/admin" : "/portal";
 
   return (
     <header className="sticky top-0 z-40 bg-paper/90 backdrop-blur border-b border-ink/8">
@@ -40,7 +41,7 @@ export default function Header({ isAuthed }) {
           ))}
         </nav>
         <div className="hidden lg:flex items-center gap-3">
-          <GhostButton onClick={() => navigate(isAuthed ? "/portal" : "/login")} className="px-5 py-2.5 text-sm">
+          <GhostButton onClick={() => navigate(isAuthed ? portalPath : "/login")} className="px-5 py-2.5 text-sm">
             <Icon name="user" size={15} />
             {isAuthed ? "My Portal" : "Employee Login"}
           </GhostButton>
@@ -76,7 +77,7 @@ export default function Header({ isAuthed }) {
               <div className="flex flex-col gap-2 mt-3">
                 <GhostButton
                   onClick={() => {
-                    navigate(isAuthed ? "/portal" : "/login");
+                    navigate(isAuthed ? portalPath : "/login");
                     setOpen(false);
                   }}
                   full

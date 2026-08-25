@@ -55,18 +55,35 @@ src/
 
 ## Backend (Vercel serverless)
 
-The resume submission flow has a real backend under `api/`, built to run as Vercel
-Serverless Functions — no persistent server, no local disk storage.
+The site has a real backend under `api/` (serverless functions) and `lib/` (shared
+helpers bundled into them — kept outside `api/` since Vercel's Hobby plan caps
+deployments at 12 functions and every file directly under `api/` counts as one).
+No persistent server, no local disk storage.
 
 ```
 api/
-  submit-resume.js   POST — validates the form, saves the submission to MongoDB
-                      Atlas, and emails the recruiter a styled notification.
-  resume-upload.js   POST — issues short-lived Vercel Blob upload tokens so the
-                      résumé file streams straight from the browser to Blob storage.
-  lib/
-    mongodb.js        Cached MongoDB Atlas connection (reused across warm invocations).
-    email.js          Nodemailer transport + the HTML email template.
+  submit-resume.js       POST — validates the resume form, saves the submission to
+                          MongoDB Atlas, and emails the recruiter a styled notification.
+  resume-upload.js       POST — issues short-lived Vercel Blob upload tokens so the
+                          résumé file streams straight from the browser to Blob storage.
+  auth/
+    register.js          POST — creates an account. The first user ever created becomes
+                          an approved admin; everyone after that is a pending employee.
+    login.js              POST — verifies credentials, blocks sign-in unless approved,
+                          issues a session (httpOnly JWT cookie).
+    logout.js             POST — clears the session cookie.
+    me.js                 GET — returns the signed-in user for the current session.
+    forgot-password.js    POST — emails a 30-minute reset link (always a generic
+                          response, so this can't be used to enumerate accounts).
+    reset-password.js     POST — verifies the reset token and sets a new password.
+  admin/
+    employees/index.js    GET — lists employees by status (admin only).
+    employees/[id].js     PATCH — approve or reject a pending employee (admin only);
+                          approval emails the employee a "you can sign in" notice.
+lib/
+  mongodb.js              Cached MongoDB Atlas connection (reused across warm invocations).
+  email.js                Nodemailer transport + all the HTML email templates.
+  auth.js                 Password hashing, session JWTs, cookie helpers, admin guard.
 ```
 
 **Upload flow:** the browser uploads the résumé directly to Vercel Blob using
@@ -75,6 +92,12 @@ This bypasses the ~4.5MB request body limit Vercel serverless functions have, an
 accepts any file type/size (capped at 15MB in `resume-upload.js`). Once the upload
 finishes, the browser posts the form fields + the blob URL as JSON to
 `/api/submit-resume`, which writes the record to MongoDB and sends the email.
+
+**Auth flow:** sessions are a JWT in an httpOnly, `SameSite=Lax` cookie (secure flag
+set automatically when served over https), signed with `AUTH_SECRET`. There's no
+separate roles/admin UI to promote someone — **register your own account first**, on
+an empty database, to become the admin. Every registration after that lands as a
+pending `employee` until an admin approves or rejects it from `/admin`.
 
 ### Environment variables
 
@@ -89,6 +112,7 @@ same variables under Project Settings → Environment Variables in Vercel:
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_SECURE` / `SMTP_USER` / `SMTP_PASS` | SMTP credentials (any provider — Gmail app password, SendGrid, Postmark, etc.) |
 | `MAIL_FROM` | "From" address for outgoing mail |
 | `RECRUITER_EMAIL` | Inbox that receives new resume submissions |
+| `AUTH_SECRET` | Random secret that signs session JWTs — generate with `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"` |
 
 ### Local development
 
@@ -110,10 +134,11 @@ config needed.
 
 ## Notes
 
-- **Authentication is mocked.** `AppContext` holds a simple `isAuthed` boolean in memory —
-  any email/password on the Login or Register page "signs you in," and there's a
-  "View Demo Portal" button on `/portal` if you're not signed in. Wire this up to a real
-  auth provider (Clerk, Auth0, Supabase, your own API, etc.) before shipping.
+- **The employee portal's mock data is still mock.** Auth (register/login/approve/reject,
+  forgot/reset password) is real and backed by MongoDB — see the Backend section above.
+  What's still hardcoded is everything *inside* the portal once you're signed in
+  (`src/data/portal.js`'s dashboard stats, missions, payroll, etc.) except the top bar,
+  which shows your real name and email.
 - **Images are placeholders** from `picsum.photos`, seeded so they stay consistent between
   reloads. Swap in real photography/headshots before launch.
 - **Job data is generated**, not fetched — see `src/data/jobs.js`. Replace `buildJobs()`
@@ -123,10 +148,11 @@ config needed.
   { id, title, category, company, location, type, level, salary, requirements, daysAgo, remote, internal }
   ```
 - **Deploying with client-side routing:** this app uses `BrowserRouter`, so your host needs
-  to rewrite all paths to `index.html` (a SPA fallback). On Netlify add a `_redirects` file
-  with `/* /index.html 200`; on Vercel this is automatic for Vite projects; on GitHub Pages
-  or a plain static file server you'll either need a rewrite rule or should switch to
-  `HashRouter` in `src/main.jsx`.
+  to rewrite all paths to `index.html` (a SPA fallback). `vercel.json` at the repo root
+  already does this for Vercel (it does **not** happen automatically). On Netlify add a
+  `_redirects` file with `/* /index.html 200`; on GitHub Pages or a plain static file
+  server you'll either need a rewrite rule or should switch to `HashRouter` in
+  `src/main.jsx`.
 - **Design tokens** (colors, fonts, shadows) live in `tailwind.config.js` — change the
   `ink` / `brass` / `moss` / `linen` palette there to re-theme the whole site.
 
