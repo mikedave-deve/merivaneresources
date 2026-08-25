@@ -8,11 +8,19 @@ import { cx } from "../../lib/utils";
 import EmployeesPanel from "./EmployeesPanel";
 import TimeOffPanel from "./TimeOffPanel";
 import MissionsPanel from "./MissionsPanel";
+import DocumentsPanel from "./DocumentsPanel";
+import IdentityPanel from "./IdentityPanel";
+import PayrollPanel from "./PayrollPanel";
+import RetirementPanel from "./RetirementPanel";
 
 const SECTIONS = [
   { id: "employees", label: "Employees", subtitle: "Review new employee registrations before they can sign in to the portal." },
   { id: "timeoff", label: "Time Off", subtitle: "Approve or deny time off requests from employees." },
   { id: "missions", label: "Missions", subtitle: "Send instructions and manage priority for each employee." },
+  { id: "documents", label: "Documents", subtitle: "Upload documents for employees to download from their portal." },
+  { id: "identity", label: "Identity", subtitle: "Review identity verification submissions." },
+  { id: "payroll", label: "Payroll", subtitle: "Set balance, pay schedule, and add payslips for each employee." },
+  { id: "retirement", label: "Retirement", subtitle: "Set 401(k) balance, contribution rate, and employer match." },
 ];
 
 export default function AdminEmployees() {
@@ -53,7 +61,7 @@ export default function AdminEmployees() {
   return (
     <div className="min-h-screen bg-linen">
       <div className="sticky top-0 z-10 bg-linen/90 backdrop-blur border-b border-ink/8">
-        <div className="max-w-5xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
           <Logo size="sm" />
           <div className="flex items-center gap-3">
             <span className="text-sm text-slateSoft hidden sm:block">{user.name}</span>
@@ -64,12 +72,12 @@ export default function AdminEmployees() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-5 sm:px-8 py-12">
+      <div className="max-w-6xl mx-auto px-5 sm:px-8 py-12">
         <p className="font-mono text-xs uppercase tracking-widest text-brass mb-2">Admin</p>
         <h1 className="font-display text-3xl sm:text-4xl font-semibold text-ink leading-tight">{active.label}</h1>
         <p className="text-slateSoft mt-3 leading-relaxed max-w-xl">{active.subtitle}</p>
 
-        <div className="flex gap-2 mt-8">
+        <div className="flex flex-wrap gap-2 mt-8">
           {SECTIONS.map((s) => (
             <button
               key={s.id}
@@ -87,6 +95,10 @@ export default function AdminEmployees() {
         {section === "employees" && <EmployeesPanel />}
         {section === "timeoff" && <TimeOffPanel />}
         {section === "missions" && <MissionsPanel />}
+        {section === "documents" && <DocumentsPanel />}
+        {section === "identity" && <IdentityPanel />}
+        {section === "payroll" && <PayrollPanel />}
+        {section === "retirement" && <RetirementPanel />}
       </div>
     </div>
   );

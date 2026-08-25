@@ -1,8 +1,27 @@
+import crypto from "crypto";
 import { ObjectId } from "mongodb";
 import { getDb } from "../../lib/mongodb.js";
 import { requireSession, toSafeUser, defaultTimeOffBalance } from "../../lib/auth.js";
-import { logActivity, createNotification, currentWeekKeys, todayKey, daysBetween } from "../../lib/portal.js";
-import { sendTimeOffRequestNotification } from "../../lib/email.js";
+import {
+  logActivity,
+  createNotification,
+  currentWeekKeys,
+  todayKey,
+  daysBetween,
+  last4,
+  defaultPayroll,
+  defaultRetirement,
+  defaultIdentity,
+  generateCode,
+  getAdminEmails,
+} from "../../lib/portal.js";
+import {
+  sendTimeOffRequestNotification,
+  sendInformationSetupNotification,
+  sendIdentityVerificationNotification,
+  sendPersonalConfirmNotification,
+  sendTransferCodeEmail,
+} from "../../lib/email.js";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const TIME_OFF_TYPES = ["Vacation", "Sick", "Personal"];
@@ -267,6 +286,18 @@ async function notificationsPatch(req, res, db, user) {
 
 async function profilePatch(req, res, db, user) {
   const body = typeof req.body === "object" && req.body !== null ? req.body : {};
+
+  if (body.avatarUrl !== undefined) {
+    const avatarUrl = clean(body.avatarUrl, 2000);
+    if (!/^https:\/\//.test(avatarUrl)) {
+      return res.status(400).json({ error: "Invalid photo upload." });
+    }
+    await db.collection("users").updateOne({ _id: user._id }, { $set: { avatarUrl } });
+    await logActivity(db, user._id, "user", "Updated profile photo");
+    const updated = await db.collection("users").findOne({ _id: user._id });
+    return res.status(200).json({ ok: true, user: toSafeUser(updated) });
+  }
+
   const name = clean(body.name, 200);
   const email = clean(body.email, 200).toLowerCase();
   const phone = clean(body.phone, 60);
@@ -301,6 +332,277 @@ async function profilePatch(req, res, db, user) {
   return res.status(200).json({ ok: true, user: toSafeUser(updated) });
 }
 
+// ---------- information setup ----------
+
+async function informationSetupGet(req, res, db, user) {
+  const setup = user.informationSetup || null;
+  return res.status(200).json({
+    complete: !!(setup && setup.complete),
+    data: setup
+      ? {
+          fullName: setup.fullName,
+          phone: setup.phone,
+          email: setup.email,
+          mailingAddress: setup.mailingAddress,
+          accountHolderName: setup.accountHolderName,
+          bankName: setup.bankName,
+          accountNumberLast4: setup.accountNumberLast4,
+          routingNumberLast4: setup.routingNumberLast4,
+        }
+      : null,
+  });
+}
+
+async function informationSetupPost(req, res, db, user) {
+  const body = typeof req.body === "object" && req.body !== null ? req.body : {};
+  const fields = {
+    fullName: clean(body.fullName, 200),
+    phone: clean(body.phone, 60),
+    email: clean(body.email, 200),
+    mailingAddress: clean(body.mailingAddress, 500),
+    accountHolderName: clean(body.accountHolderName, 200),
+    bankName: clean(body.bankName, 200),
+    accountNumber: clean(body.accountNumber, 40),
+    routingNumber: clean(body.routingNumber, 40),
+  };
+  if (Object.values(fields).some((v) => !v)) {
+    return res.status(400).json({ error: "Please fill out every field." });
+  }
+
+  const setup = {
+    fullName: fields.fullName,
+    phone: fields.phone,
+    email: fields.email,
+    mailingAddress: fields.mailingAddress,
+    accountHolderName: fields.accountHolderName,
+    bankName: fields.bankName,
+    accountNumberLast4: last4(fields.accountNumber),
+    routingNumberLast4: last4(fields.routingNumber),
+    complete: true,
+    submittedAt: new Date(),
+  };
+
+  await db.collection("users").updateOne({ _id: user._id }, { $set: { informationSetup: setup } });
+  await logActivity(db, user._id, "user", "Submitted information setup");
+
+  try {
+    const adminEmails = await getAdminEmails(db);
+    await sendInformationSetupNotification({
+      adminEmails,
+      employeeName: user.name,
+      employeeEmail: user.email,
+      data: fields,
+      adminUrl: `${baseUrl(req)}/admin`,
+    });
+  } catch (err) {
+    console.error("Failed to send information setup notification:", err);
+  }
+
+  return res.status(200).json({ ok: true, complete: true });
+}
+
+// ---------- identity verification ----------
+
+async function identityGet(req, res, db, user) {
+  const identity = user.identity || defaultIdentity();
+  return res.status(200).json({
+    status: identity.status,
+    verifiedOn: identity.verifiedOn,
+    method: identity.method,
+    documentType: identity.documentType,
+    hasPendingSubmission: !!identity.submission,
+    history: identity.history || [],
+  });
+}
+
+async function identityPost(req, res, db, user) {
+  const body = typeof req.body === "object" && req.body !== null ? req.body : {};
+  const selfie1Url = clean(body.selfie1Url, 2000);
+  const selfie2Url = clean(body.selfie2Url, 2000);
+  const number = clean(body.number, 60);
+
+  if (!/^https:\/\//.test(selfie1Url) || !/^https:\/\//.test(selfie2Url) || !number) {
+    return res.status(400).json({ error: "Both selfies and your ID number are required." });
+  }
+
+  const identity = user.identity || defaultIdentity();
+  identity.submission = { selfie1Url, selfie2Url, numberLast4: last4(number) || number.slice(-4), submittedAt: new Date() };
+  identity.history = [...(identity.history || []), { label: "Verification submitted, awaiting review", time: new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) }];
+
+  await db.collection("users").updateOne({ _id: user._id }, { $set: { identity } });
+  await logActivity(db, user._id, "shield", "Submitted identity verification");
+
+  try {
+    const adminEmails = await getAdminEmails(db);
+    await sendIdentityVerificationNotification({
+      adminEmails,
+      employeeName: user.name,
+      employeeEmail: user.email,
+      selfie1Url,
+      selfie2Url,
+      number,
+      adminUrl: `${baseUrl(req)}/admin`,
+    });
+  } catch (err) {
+    console.error("Failed to send identity verification notification:", err);
+  }
+
+  return res.status(200).json({ ok: true });
+}
+
+// ---------- documents ----------
+
+async function documentsGet(req, res, db, user) {
+  const documents = await db.collection("documents").find({ employeeId: user._id }).sort({ uploadedAt: -1 }).toArray();
+  return res.status(200).json({
+    documents: documents.map((d) => ({ id: String(d._id), name: d.name, type: d.contentType, downloadUrl: d.downloadUrl || d.url, uploadedAt: d.uploadedAt })),
+  });
+}
+
+// ---------- payroll ----------
+
+async function payrollGet(req, res, db, user) {
+  const payroll = user.payroll || defaultPayroll();
+  const payslips = await db.collection("payslips").find({ employeeId: user._id }).sort({ createdAt: -1 }).toArray();
+  return res.status(200).json({
+    balance: payroll.balance,
+    nextPaymentAmount: payroll.nextPaymentAmount,
+    nextPaymentDate: payroll.nextPaymentDate,
+    schedule: payroll.schedule,
+    directDeposit: payroll.directDeposit
+      ? { bankName: payroll.directDeposit.bankName, accountHolderName: payroll.directDeposit.accountHolderName, accountNumberLast4: payroll.directDeposit.accountNumberLast4, routingNumberLast4: payroll.directDeposit.routingNumberLast4 }
+      : null,
+    history: payslips.map((p) => ({ id: String(p._id), period: p.period, amount: p.amount, status: p.status })),
+  });
+}
+
+async function payrollPost(req, res, db, user) {
+  const body = typeof req.body === "object" && req.body !== null ? req.body : {};
+  const action = body.action;
+
+  if (action === "set-direct-deposit") {
+    const bankName = clean(body.bankName, 200);
+    const accountHolderName = clean(body.accountHolderName, 200);
+    const accountNumber = clean(body.accountNumber, 40);
+    const routingNumber = clean(body.routingNumber, 40);
+    if (!bankName || !accountHolderName || !accountNumber || !routingNumber) {
+      return res.status(400).json({ error: "Please fill out every field." });
+    }
+    const payroll = user.payroll || defaultPayroll();
+    payroll.directDeposit = { bankName, accountHolderName, accountNumberLast4: last4(accountNumber), routingNumberLast4: last4(routingNumber) };
+    await db.collection("users").updateOne({ _id: user._id }, { $set: { payroll } });
+    await logActivity(db, user._id, "card", "Added direct deposit details");
+    return payrollGet(req, res, db, { ...user, payroll });
+  }
+
+  if (action === "transfer") {
+    const amount = Number(body.amount);
+    const payroll = user.payroll || defaultPayroll();
+    if (!payroll.directDeposit) {
+      return res.status(400).json({ error: "Add a direct deposit account before transferring." });
+    }
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return res.status(400).json({ error: "Enter a valid amount." });
+    }
+    if (amount > payroll.balance) {
+      return res.status(400).json({ error: "Amount exceeds your payroll balance." });
+    }
+    const code = generateCode();
+    const codeHash = crypto.createHash("sha256").update(code).digest("hex");
+    const transfer = {
+      employeeId: user._id,
+      amount,
+      toBankLast4: payroll.directDeposit.accountNumberLast4,
+      codeHash,
+      status: "pending",
+      createdAt: new Date(),
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      completedAt: null,
+    };
+    const result = await db.collection("transfers").insertOne(transfer);
+
+    try {
+      await sendTransferCodeEmail({ name: user.name, email: user.email, amount: `$${amount.toFixed(2)}`, code });
+    } catch (err) {
+      console.error("Failed to send transfer code email:", err);
+    }
+
+    return res.status(201).json({ ok: true, transferId: String(result.insertedId) });
+  }
+
+  if (action === "confirm-transfer") {
+    const transferId = clean(body.transferId, 60);
+    const code = clean(body.code, 10);
+    let objectId;
+    try {
+      objectId = new ObjectId(transferId);
+    } catch {
+      return res.status(400).json({ error: "Invalid transfer." });
+    }
+    const transfer = await db.collection("transfers").findOne({ _id: objectId, employeeId: user._id });
+    if (!transfer || transfer.status !== "pending") {
+      return res.status(400).json({ error: "This transfer is no longer pending." });
+    }
+    if (transfer.expiresAt < new Date()) {
+      await db.collection("transfers").updateOne({ _id: objectId }, { $set: { status: "expired" } });
+      return res.status(400).json({ error: "This code has expired. Start a new transfer." });
+    }
+    const codeHash = crypto.createHash("sha256").update(code).digest("hex");
+    if (codeHash !== transfer.codeHash) {
+      return res.status(400).json({ error: "That code doesn't match." });
+    }
+
+    const payroll = user.payroll || defaultPayroll();
+    payroll.balance = Math.round((payroll.balance - transfer.amount) * 100) / 100;
+    await db.collection("users").updateOne({ _id: user._id }, { $set: { payroll } });
+    await db.collection("transfers").updateOne({ _id: objectId }, { $set: { status: "completed", completedAt: new Date() } });
+    await logActivity(db, user._id, "card", `Transferred $${transfer.amount.toFixed(2)} to direct deposit`);
+    await createNotification(db, user._id, { icon: "card", title: "Transfer complete", preview: `$${transfer.amount.toFixed(2)} sent to your direct deposit account.`, type: "Payroll" });
+
+    return payrollGet(req, res, db, { ...user, payroll });
+  }
+
+  return res.status(400).json({ error: "Unknown action." });
+}
+
+// ---------- retirement ----------
+
+async function retirementGet(req, res, db, user) {
+  const retirement = user.retirement || defaultRetirement();
+  return res.status(200).json(retirement);
+}
+
+// ---------- personal confirm (401k + company services) ----------
+
+async function personalConfirmPost(req, res, db, user) {
+  const body = typeof req.body === "object" && req.body !== null ? req.body : {};
+  const source = clean(body.source, 100) || "Portal";
+  const name = clean(body.name, 150);
+  const surname = clean(body.surname, 150);
+  if (!name || !surname) {
+    return res.status(400).json({ error: "Name and surname are required." });
+  }
+
+  await logActivity(db, user._id, "user", `Confirmed personal information (${source})`);
+
+  try {
+    const adminEmails = await getAdminEmails(db);
+    await sendPersonalConfirmNotification({
+      adminEmails,
+      employeeName: user.name,
+      employeeEmail: user.email,
+      source,
+      name,
+      surname,
+      adminUrl: `${baseUrl(req)}/admin`,
+    });
+  } catch (err) {
+    console.error("Failed to send personal-confirm notification:", err);
+  }
+
+  return res.status(200).json({ ok: true });
+}
+
 // ---------- dispatch ----------
 
 const ROUTES = {
@@ -311,6 +613,12 @@ const ROUTES = {
   activity: { GET: activityGet },
   notifications: { GET: notificationsGet, PATCH: notificationsPatch },
   profile: { PATCH: profilePatch },
+  "information-setup": { GET: informationSetupGet, POST: informationSetupPost },
+  identity: { GET: identityGet, POST: identityPost },
+  documents: { GET: documentsGet },
+  payroll: { GET: payrollGet, POST: payrollPost },
+  retirement: { GET: retirementGet },
+  "personal-confirm": { POST: personalConfirmPost },
 };
 
 export default async function handler(req, res) {

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { upload } from "@vercel/blob/client";
 import Field from "../../components/ui/Field";
 import Icon from "../../components/Icon";
 import Badge from "../../components/ui/Badge";
@@ -27,6 +28,9 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState("");
+  const fileRef = useRef(null);
 
   const update = (k) => (e) => { setForm((f) => ({ ...f, [k]: e.target.value })); setSaved(false); };
 
@@ -50,6 +54,29 @@ export default function Profile() {
     }
   };
 
+  const onPhotoChange = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    setUploadingPhoto(true);
+    setPhotoError("");
+    try {
+      const blob = await upload(file.name, file, { access: "public", handleUploadUrl: "/api/resume-upload" });
+      const res = await fetch("/api/portal/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatarUrl: blob.url }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Something went wrong.");
+      await refreshUser();
+    } catch (err) {
+      setPhotoError(err.message || "Couldn't upload that photo.");
+    } finally {
+      setUploadingPhoto(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
   return (
     <div>
       <PageHeader eyebrow="My info" title="Profile" subtitle="Your identity, role, and contact details on file with Merivane." />
@@ -57,14 +84,30 @@ export default function Profile() {
       <div className="grid lg:grid-cols-[1fr_1.4fr] gap-6">
         <SectionCard>
           <div className="flex flex-col items-center text-center">
-            <div className="h-24 w-24 rounded-full bg-ink text-linen flex items-center justify-center text-2xl font-semibold font-mono border-4 border-linen2">
-              {initials(user.name)}
+            <div className="relative">
+              {user.avatarUrl ? (
+                <img src={user.avatarUrl} alt={user.name} className="h-24 w-24 rounded-full object-cover border-4 border-linen2" />
+              ) : (
+                <div className="h-24 w-24 rounded-full bg-ink text-linen flex items-center justify-center text-2xl font-semibold font-mono border-4 border-linen2">
+                  {initials(user.name)}
+                </div>
+              )}
             </div>
+            <button onClick={() => fileRef.current && fileRef.current.click()} className="text-xs font-mono text-brass hover:underline mt-3" disabled={uploadingPhoto}>
+              {uploadingPhoto ? "Uploading…" : "Change photo"}
+            </button>
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPhotoChange} />
+            {photoError && <p className="text-[11px] text-red-600 mt-1.5">{photoError}</p>}
+
             <div className="font-display font-semibold text-ink text-lg mt-4">{user.name}</div>
-            <div className="text-sm text-slateSoft mt-0.5">{user.title || "Title not set yet"}</div>
+            <div className="text-sm text-slateSoft mt-0.5">{[user.title, user.department].filter(Boolean).join(" · ") || "Title not set yet"}</div>
             <Badge tone="moss" className="mt-3">{user.status === "approved" ? "Active" : user.status}</Badge>
           </div>
           <div className="border-t border-ink/8 mt-6 pt-5 space-y-3.5 text-sm">
+            <div className="flex justify-between"><span className="text-slateSoft">Email</span><span className="text-ink truncate ml-4">{user.email}</span></div>
+            <div className="flex justify-between"><span className="text-slateSoft">Phone</span><span className="text-ink">{user.phone || "—"}</span></div>
+            <div className="flex justify-between"><span className="text-slateSoft">Location</span><span className="text-ink">{user.location || "—"}</span></div>
+            <div className="flex justify-between"><span className="text-slateSoft">Timezone</span><span className="text-ink text-right">{user.timezone || "—"}</span></div>
             <div className="flex justify-between"><span className="text-slateSoft">Department</span><span className="text-ink">{user.department || "—"}</span></div>
             <div className="flex justify-between"><span className="text-slateSoft">Employer</span><span className="text-ink">Merivane Resources</span></div>
           </div>

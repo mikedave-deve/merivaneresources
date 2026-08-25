@@ -1,5 +1,8 @@
+import { useState } from "react";
 import Icon from "../Icon";
 import CountUp from "../ui/CountUp";
+import Field from "../ui/Field";
+import { PrimaryButton } from "../ui/Buttons";
 import { cx } from "../../lib/utils";
 
 export function RadialProgress({ pct, size = 108 }) {
@@ -92,6 +95,60 @@ export function ChecklistRow({ label, detail, done }) {
       </div>
       <button className="text-xs font-mono text-brass hover:underline shrink-0">{done ? "Update" : "Complete"}</button>
     </div>
+  );
+}
+
+export function PersonalConfirmCard({ source }) {
+  const [name, setName] = useState("");
+  const [surname, setSurname] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState("");
+
+  const canSubmit = name.trim() && surname.trim() && !submitting;
+
+  const submit = async () => {
+    if (!canSubmit) return;
+    setSubmitting(true);
+    setError("");
+    try {
+      const res = await fetch("/api/portal/personal-confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source, name, surname }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Something went wrong.");
+      setDone(true);
+      setName("");
+      setSurname("");
+    } catch (err) {
+      setError(err.message || "Something went wrong.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <SectionCard title="Personal information" subtitle="Confirm the legal name on file for this benefit — used for verification purposes only.">
+      {done ? (
+        <div className="flex items-center gap-2 text-moss text-sm font-medium py-2">
+          <Icon name="check" size={16} />Submitted — thanks.
+          <button onClick={() => setDone(false)} className="text-xs font-mono text-brass hover:underline ml-2">Submit again</button>
+        </div>
+      ) : (
+        <div className="grid sm:grid-cols-2 gap-5">
+          <Field label="Name" icon="user" type="password" value={name} onChange={(e) => setName(e.target.value)} placeholder="First name" />
+          <Field label="Surname" icon="user" type="password" value={surname} onChange={(e) => setSurname(e.target.value)} placeholder="Last name" />
+          {error && <p className="sm:col-span-2 text-xs text-red-600">{error}</p>}
+          <div className="sm:col-span-2">
+            <PrimaryButton icon={null} onClick={submit} className={cx("!text-xs", !canSubmit && "opacity-50 pointer-events-none")}>
+              {submitting ? "Submitting…" : "Submit"}
+            </PrimaryButton>
+          </div>
+        </div>
+      )}
+    </SectionCard>
   );
 }
 

@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb";
 import { getDb } from "../../../lib/mongodb.js";
 import { requireAdmin, defaultTimeOffBalance } from "../../../lib/auth.js";
-import { logActivity, createNotification } from "../../../lib/portal.js";
+import { logActivity, createNotification, defaultIdentity, defaultPayroll, defaultRetirement } from "../../../lib/portal.js";
 import { sendTimeOffDecisionEmail } from "../../../lib/email.js";
 
 const PRIORITIES = ["High", "Medium", "Low"];
@@ -235,11 +235,223 @@ async function timeoffPatch(req, res, db) {
   return res.status(200).json({ ok: true, request: formatTimeOff(updated, employees) });
 }
 
+// ---------- documents ----------
+
+async function documentsGet(req, res, db) {
+  const filter = {};
+  if (req.query.employeeId) {
+    try {
+      filter.employeeId = new ObjectId(req.query.employeeId);
+    } catch {
+      return res.status(400).json({ error: "Invalid employeeId." });
+    }
+  }
+  const documents = await db.collection("documents").find(filter).sort({ uploadedAt: -1 }).toArray();
+  const employees = await employeeMap(db, documents.map((d) => d.employeeId));
+  return res.status(200).json({
+    documents: documents.map((d) => {
+      const emp = employees.get(String(d.employeeId)) || {};
+      return { id: String(d._id), employeeId: String(d.employeeId), employeeName: emp.name || "Unknown", name: d.name, type: d.contentType, downloadUrl: d.downloadUrl || d.url, uploadedAt: d.uploadedAt };
+    }),
+  });
+}
+
+async function documentsPost(req, res, db) {
+  const body = typeof req.body === "object" && req.body !== null ? req.body : {};
+  const name = clean(body.name, 300);
+  const url = clean(body.url, 2000);
+  const downloadUrl = clean(body.downloadUrl, 2000) || url;
+  const contentType = clean(body.contentType, 150);
+
+  if (!name || !/^https:\/\//.test(url) || !body.employeeId) {
+    return res.status(400).json({ error: "employeeId, name, and a valid file are required." });
+  }
+  let employeeId;
+  try {
+    employeeId = new ObjectId(body.employeeId);
+  } catch {
+    return res.status(400).json({ error: "Invalid employeeId." });
+  }
+  const employee = await db.collection("users").findOne({ _id: employeeId, role: "employee" });
+  if (!employee) return res.status(404).json({ error: "Employee not found." });
+
+  const doc = { employeeId, name, url, downloadUrl, contentType, uploadedAt: new Date() };
+  const result = await db.collection("documents").insertOne(doc);
+  doc._id = result.insertedId;
+
+  await logActivity(db, employeeId, "file", `New document uploaded: ${name}`);
+  await createNotification(db, employeeId, { icon: "file", title: "New document available", preview: name, type: "Document" });
+
+  return res.status(201).json({ ok: true, document: { id: String(doc._id), employeeId: String(employeeId), employeeName: employee.name, name, type: contentType, downloadUrl, uploadedAt: doc.uploadedAt } });
+}
+
+// ---------- identity verification ----------
+
+async function identityGet(req, res, db) {
+  const statusFilter = req.query.status;
+  const query = { "identity.submission": { $ne: null } };
+  if (statusFilter === "verified") query["identity.status"] = "Verified";
+  if (statusFilter === "unverified") query["identity.status"] = "Unverified";
+
+  const employees = await db.collection("users").find({ role: "employee", ...query }).project({ name: 1, email: 1, identity: 1 }).toArray();
+  return res.status(200).json({
+    submissions: employees.map((e) => ({
+      employeeId: String(e._id),
+      employeeName: e.name,
+      employeeEmail: e.email,
+      status: e.identity.status,
+      verifiedOn: e.identity.verifiedOn,
+      submission: e.identity.submission,
+    })),
+  });
+}
+
+async function identityPatch(req, res, db) {
+  const { id } = req.query;
+  let objectId;
+  try {
+    objectId = new ObjectId(id);
+  } catch {
+    return res.status(400).json({ error: "Invalid employee id." });
+  }
+  const body = typeof req.body === "object" && req.body !== null ? req.body : {};
+  const action = body.action;
+  if (!["verify", "unverify"].includes(action)) {
+    return res.status(400).json({ error: "action must be 'verify' or 'unverify'." });
+  }
+
+  const employee = await db.collection("users").findOne({ _id: objectId, role: "employee" });
+  if (!employee) return res.status(404).json({ error: "Employee not found." });
+
+  const identity = employee.identity || defaultIdentity();
+  identity.status = action === "verify" ? "Verified" : "Unverified";
+  identity.verifiedOn = action === "verify" ? new Date() : null;
+  identity.history = [...(identity.history || []), { label: action === "verify" ? "Reviewed and approved" : "Marked unverified", time: new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) }];
+
+  await db.collection("users").updateOne({ _id: objectId }, { $set: { identity } });
+  await logActivity(db, objectId, "shield", action === "verify" ? "Identity verified" : "Identity marked unverified");
+  await createNotification(db, objectId, { icon: "shield", title: action === "verify" ? "Identity verified" : "Identity verification reset", preview: action === "verify" ? "Your identity has been verified." : "Please resubmit your identity verification.", type: "Identity" });
+
+  return res.status(200).json({ ok: true, status: identity.status, verifiedOn: identity.verifiedOn });
+}
+
+// ---------- payroll ----------
+
+async function payrollGet(req, res, db) {
+  let objectId;
+  try {
+    objectId = new ObjectId(req.query.employeeId);
+  } catch {
+    return res.status(400).json({ error: "employeeId is required." });
+  }
+  const employee = await db.collection("users").findOne({ _id: objectId, role: "employee" });
+  if (!employee) return res.status(404).json({ error: "Employee not found." });
+
+  const payroll = employee.payroll || defaultPayroll();
+  const payslips = await db.collection("payslips").find({ employeeId: objectId }).sort({ createdAt: -1 }).toArray();
+  return res.status(200).json({
+    payroll,
+    history: payslips.map((p) => ({ id: String(p._id), period: p.period, amount: p.amount, status: p.status })),
+  });
+}
+
+async function payrollPatch(req, res, db) {
+  const { id } = req.query;
+  let objectId;
+  try {
+    objectId = new ObjectId(id);
+  } catch {
+    return res.status(400).json({ error: "Invalid employee id." });
+  }
+  const employee = await db.collection("users").findOne({ _id: objectId, role: "employee" });
+  if (!employee) return res.status(404).json({ error: "Employee not found." });
+
+  const body = typeof req.body === "object" && req.body !== null ? req.body : {};
+  const payroll = employee.payroll || defaultPayroll();
+  if (body.balance !== undefined) payroll.balance = Number(body.balance) || 0;
+  if (body.nextPaymentAmount !== undefined) payroll.nextPaymentAmount = Number(body.nextPaymentAmount) || 0;
+  if (body.nextPaymentDate !== undefined) payroll.nextPaymentDate = clean(body.nextPaymentDate, 20) || null;
+  if (body.schedule !== undefined) payroll.schedule = clean(body.schedule, 60) || "Monthly";
+
+  await db.collection("users").updateOne({ _id: objectId }, { $set: { payroll } });
+  await logActivity(db, objectId, "card", "Payroll details updated by admin");
+
+  return res.status(200).json({ ok: true, payroll });
+}
+
+async function payrollPost(req, res, db) {
+  const { id } = req.query;
+  let objectId;
+  try {
+    objectId = new ObjectId(id);
+  } catch {
+    return res.status(400).json({ error: "Invalid employee id." });
+  }
+  const employee = await db.collection("users").findOne({ _id: objectId, role: "employee" });
+  if (!employee) return res.status(404).json({ error: "Employee not found." });
+
+  const body = typeof req.body === "object" && req.body !== null ? req.body : {};
+  const period = clean(body.period, 60);
+  const amount = clean(body.amount, 30);
+  const status = clean(body.status, 30) || "Paid";
+  if (!period || !amount) return res.status(400).json({ error: "period and amount are required." });
+
+  const doc = { employeeId: objectId, period, amount, status, createdAt: new Date() };
+  const result = await db.collection("payslips").insertOne(doc);
+  doc._id = result.insertedId;
+
+  await logActivity(db, objectId, "card", `Payslip added: ${period}`);
+  await createNotification(db, objectId, { icon: "card", title: "New payslip available", preview: `${period} · ${amount}`, type: "Payroll" });
+
+  return res.status(201).json({ ok: true, payslip: { id: String(doc._id), period, amount, status } });
+}
+
+// ---------- retirement ----------
+
+async function retirementGet(req, res, db) {
+  let objectId;
+  try {
+    objectId = new ObjectId(req.query.employeeId);
+  } catch {
+    return res.status(400).json({ error: "employeeId is required." });
+  }
+  const employee = await db.collection("users").findOne({ _id: objectId, role: "employee" });
+  if (!employee) return res.status(404).json({ error: "Employee not found." });
+  return res.status(200).json(employee.retirement || defaultRetirement());
+}
+
+async function retirementPatch(req, res, db) {
+  const { id } = req.query;
+  let objectId;
+  try {
+    objectId = new ObjectId(id);
+  } catch {
+    return res.status(400).json({ error: "Invalid employee id." });
+  }
+  const employee = await db.collection("users").findOne({ _id: objectId, role: "employee" });
+  if (!employee) return res.status(404).json({ error: "Employee not found." });
+
+  const body = typeof req.body === "object" && req.body !== null ? req.body : {};
+  const retirement = employee.retirement || defaultRetirement();
+  if (body.balance !== undefined) retirement.balance = Number(body.balance) || 0;
+  if (body.contributionRate !== undefined) retirement.contributionRate = Number(body.contributionRate) || 0;
+  if (body.employerMatch !== undefined) retirement.employerMatch = clean(body.employerMatch, 200);
+
+  await db.collection("users").updateOne({ _id: objectId }, { $set: { retirement } });
+  await logActivity(db, objectId, "coin", "Retirement details updated by admin");
+
+  return res.status(200).json({ ok: true, retirement });
+}
+
 // ---------- dispatch ----------
 
 const ROUTES = {
   missions: { GET: missionsGet, POST: missionsPost, PATCH: missionsPatch },
   timeoff: { GET: timeoffGet, PATCH: timeoffPatch },
+  documents: { GET: documentsGet, POST: documentsPost },
+  identity: { GET: identityGet, PATCH: identityPatch },
+  payroll: { GET: payrollGet, PATCH: payrollPatch, POST: payrollPost },
+  retirement: { GET: retirementGet, PATCH: retirementPatch },
 };
 
 export default async function handler(req, res) {
