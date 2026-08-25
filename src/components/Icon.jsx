@@ -1,0 +1,59 @@
+import {
+  Menu, X, Search, MapPin, Briefcase, Clock, Coins, ArrowRight, Check, Mail, Lock,
+  Eye, EyeOff, User, Phone, Upload, Star, Linkedin, Twitter, Bell, LayoutGrid,
+  FileText, MessageSquare, CreditCard, Users, Settings, LogOut, ChevronDown,
+  ChevronRight, Download, Calendar, TrendingUp, Award, Globe, Building2, Sparkles,
+  Quote, Filter, Heart, Shield, Compass, Loader2, AlertCircle,
+} from "lucide-react";
+
+const ICONS = {
+  menu: Menu,
+  close: X,
+  search: Search,
+  pin: MapPin,
+  briefcase: Briefcase,
+  clock: Clock,
+  coin: Coins,
+  arrowRight: ArrowRight,
+  check: Check,
+  mail: Mail,
+  lock: Lock,
+  eye: Eye,
+  eyeOff: EyeOff,
+  user: User,
+  phone: Phone,
+  upload: Upload,
+  star: Star,
+  linkedin: Linkedin,
+  twitter: Twitter,
+  bell: Bell,
+  grid: LayoutGrid,
+  file: FileText,
+  message: MessageSquare,
+  card: CreditCard,
+  users: Users,
+  settings: Settings,
+  logout: LogOut,
+  chevronDown: ChevronDown,
+  chevronRight: ChevronRight,
+  download: Download,
+  calendar: Calendar,
+  trend: TrendingUp,
+  award: Award,
+  globe: Globe,
+  building: Building2,
+  sparkle: Sparkles,
+  quote: Quote,
+  filter: Filter,
+  heart: Heart,
+  shield: Shield,
+  compass: Compass,
+  loader: Loader2,
+  alert: AlertCircle,
+};
+
+export default function Icon({ name, size = 18, className = "", strokeWidth = 1.75 }) {
+  const Cmp = ICONS[name];
+  if (!Cmp) return null;
+  return <Cmp size={size} className={className} strokeWidth={strokeWidth} />;
+}
