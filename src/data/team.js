@@ -1,5 +1,11 @@
 import hiringManagerPhoto from "../assets/team/hiring-manager.jpg";
 import supervisorPhoto from "../assets/team/supervisor.jpg";
+import bryceHamiltonPhoto from "../assets/team/bryce-hamilton.jpg";
+import connorReyesPhoto from "../assets/team/connor-reyes.jpg";
+import grantFosterPhoto from "../assets/team/grant-foster.jpg";
+import hannahWhitmorePhoto from "../assets/team/hannah-whitmore.jpg";
+import laurenCarterPhoto from "../assets/team/lauren-carter.jpg";
+import nathanColePhoto from "../assets/team/nathan-cole.jpg";
 
 function pex(id) {
   return `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=480&h=360&fit=crop`;
@@ -21,11 +27,11 @@ export const TEAM = [
   { name: "Chloe Anderson", role: "Senior Recruiter, Sales & CX", blurb: "Places sales, support, and customer experience talent with teams that move fast.", img: pex(38885050) },
   { name: "Jordan Mitchell", role: "Lead Recruiter, Operations & Finance", blurb: "Matches operations and finance professionals to roles that fit their strengths.", img: pex(4965009) },
   { name: "Victoria Reed", role: "Payroll & Benefits Manager", blurb: "Makes sure every placed candidate gets paid accurately and on time, everywhere.", img: pex(34078749) },
-  { name: "Connor Reyes", role: "Senior Account Manager", blurb: "Keeps long-standing employer partners happy long after the first placement.", img: pex(33201347) },
-  { name: "Hannah Whitmore", role: "Recruiter, Design & Product", blurb: "Finds designers and product people who care as much about craft as speed.", img: pex(38581712) },
-  { name: "Bryce Hamilton", role: "IT & Systems Lead", blurb: "Keeps Merivane's own tools, logins, and platforms running without a hitch.", img: pex(20374423) },
-  { name: "Lauren Carter", role: "Content & Employer Branding Lead", blurb: "Writes the job posts and stories that make candidates want to apply.", img: pex(36819484) },
-  { name: "Nathan Cole", role: "Compliance & Contracts Manager", blurb: "Makes sure every placement is paperwork-clean across 38 countries.", img: pex(35282068) },
+  { name: "Connor Reyes", role: "Senior Account Manager", blurb: "Keeps long-standing employer partners happy long after the first placement.", img: connorReyesPhoto },
+  { name: "Hannah Whitmore", role: "Recruiter, Design & Product", blurb: "Finds designers and product people who care as much about craft as speed.", img: hannahWhitmorePhoto },
+  { name: "Bryce Hamilton", role: "IT & Systems Lead", blurb: "Keeps Merivane's own tools, logins, and platforms running without a hitch.", img: bryceHamiltonPhoto },
+  { name: "Lauren Carter", role: "Content & Employer Branding Lead", blurb: "Writes the job posts and stories that make candidates want to apply.", img: laurenCarterPhoto },
+  { name: "Nathan Cole", role: "Compliance & Contracts Manager", blurb: "Makes sure every placement is paperwork-clean across 38 countries.", img: nathanColePhoto },
   { name: "Natalie Simmons", role: "Candidate Experience Lead", blurb: "Owns the feel of every touchpoint from first application to offer.", img: pex(34377373) },
-  { name: "Grant Foster", role: "Business Intelligence Analyst", blurb: "Turns placement data into decisions the whole team can act on.", img: pex(12311546) },
+  { name: "Grant Foster", role: "Business Intelligence Analyst", blurb: "Turns placement data into decisions the whole team can act on.", img: grantFosterPhoto },
 ];
