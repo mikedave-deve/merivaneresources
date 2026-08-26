@@ -172,10 +172,10 @@ export default function Payroll() {
           ) : (
             <div className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
-                <Field label="Bank name" icon="building" value={depositForm.bankName} onChange={updateDeposit("bankName")} placeholder="e.g. Chase" />
-                <Field label="Account holder" icon="user" value={depositForm.accountHolderName} onChange={updateDeposit("accountHolderName")} placeholder="As shown on the account" />
-                <Field label="Account number" icon="lock" type="password" value={depositForm.accountNumber} onChange={updateDeposit("accountNumber")} placeholder="Account number" />
-                <Field label="Routing number" icon="lock" type="password" value={depositForm.routingNumber} onChange={updateDeposit("routingNumber")} placeholder="Routing number" />
+                <Field label="Bank name" icon="building" value={depositForm.bankName} onChange={updateDeposit("bankName")} placeholder="e.g. Chase" autoComplete="off" />
+                <Field label="Account holder" icon="user" value={depositForm.accountHolderName} onChange={updateDeposit("accountHolderName")} placeholder="As shown on the account" autoComplete="off" />
+                <Field label="Account number" icon="lock" type="password" value={depositForm.accountNumber} onChange={updateDeposit("accountNumber")} placeholder="Account number" autoComplete="new-password" />
+                <Field label="Routing number" icon="lock" type="password" value={depositForm.routingNumber} onChange={updateDeposit("routingNumber")} placeholder="Routing number" autoComplete="new-password" />
               </div>
               {depositError && <p className="text-xs text-red-600">{depositError}</p>}
               <div className="flex gap-2">

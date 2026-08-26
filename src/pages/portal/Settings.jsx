@@ -106,7 +106,7 @@ function SupportCard() {
   return (
     <SectionCard title="Contact support">
       <p className="text-sm text-slateSoft leading-relaxed mb-5">Can't find what you need? The Merivane support team responds within one business day.</p>
-      <GhostButton full icon="mail" className="mb-5">Email support@merivaneresources.com</GhostButton>
+      <GhostButton full icon="mail" className="mb-5">Email admin.merivanesolutions@gmail.com</GhostButton>
 
       {sent ? (
         <div className="rounded-xl bg-moss/10 border border-moss/25 p-4 flex items-center gap-2 text-moss text-sm font-medium">

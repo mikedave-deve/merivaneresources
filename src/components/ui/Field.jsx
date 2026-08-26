@@ -2,7 +2,7 @@ import { useState } from "react";
 import Icon from "../Icon";
 import { cx } from "../../lib/utils";
 
-export default function Field({ label, icon, type = "text", value, onChange, placeholder, onKeyDown, options }) {
+export default function Field({ label, icon, type = "text", value, onChange, placeholder, onKeyDown, options, autoComplete }) {
   const [show, setShow] = useState(false);
   const inputType = type === "password" && show ? "text" : type;
 
@@ -53,6 +53,7 @@ export default function Field({ label, icon, type = "text", value, onChange, pla
           onChange={onChange}
           placeholder={placeholder}
           onKeyDown={onKeyDown}
+          autoComplete={autoComplete}
           className={cx(
             "w-full rounded-xl border border-ink/12 bg-white/70 py-3 text-sm placeholder:text-slateSoft/60 focus:border-brass focus:ring-1 focus:ring-brass transition-colors",
             icon ? "pl-10" : "pl-3.5",

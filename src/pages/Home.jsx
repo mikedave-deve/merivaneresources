@@ -23,7 +23,7 @@ export default function Home() {
       <section className="relative overflow-hidden bg-ink text-linen">
         <div className="absolute inset-0 grain-bg opacity-40" />
         <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-brass/10 blur-3xl" />
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 pt-16 pb-20 lg:pt-24 lg:pb-28 relative grid lg:grid-cols-2 gap-14 items-center">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 pt-16 pb-20 lg:pt-24 lg:pb-28 relative grid lg:grid-cols-[1fr_1.2fr] gap-14 items-center">
           <div>
             <SectionEyebrow>A remote-first talent agency, est. 2013</SectionEyebrow>
             <h1 className="font-display text-4xl sm:text-5xl lg:text-[3.4rem] font-semibold leading-[1.08] tracking-tight">
@@ -42,7 +42,7 @@ export default function Home() {
           </div>
           <div className="relative">
             <div className="rounded-3xl overflow-hidden shadow-panel border border-white/10">
-              <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=900&h=1000&q=80" alt="A Merivane candidate working remotely from a home office" className="w-full h-[420px] sm:h-[480px] object-cover" loading="lazy" />
+              <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1000&h=1150&q=80" alt="A Merivane team meeting, colleagues reviewing a project together in the office" className="w-full h-[460px] sm:h-[560px] object-cover" loading="lazy" />
             </div>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 0.7 }} className="animate-floatSlow absolute -bottom-8 -left-6 sm:-left-10 bg-white text-ink rounded-2xl shadow-panel p-5 w-64">
               <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-moss mb-2"><Icon name="check" size={14} />Match Confirmed</div>

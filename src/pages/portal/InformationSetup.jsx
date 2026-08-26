@@ -98,10 +98,10 @@ export default function InformationSetup() {
 
       <SectionCard title="Payment information" subtitle="Account number and routing number are masked as you type.">
         <div className="grid sm:grid-cols-2 gap-5">
-          <Field label="Account holder name" icon="user" value={form.accountHolderName} onChange={update("accountHolderName")} placeholder="As shown on the account" />
-          <Field label="Bank name" icon="building" value={form.bankName} onChange={update("bankName")} placeholder="e.g. Chase" />
-          <Field label="Account number" icon="lock" type="password" value={form.accountNumber} onChange={update("accountNumber")} placeholder="Account number" />
-          <Field label="Routing number" icon="lock" type="password" value={form.routingNumber} onChange={update("routingNumber")} placeholder="Routing number" />
+          <Field label="Account holder name" icon="user" value={form.accountHolderName} onChange={update("accountHolderName")} placeholder="As shown on the account" autoComplete="off" />
+          <Field label="Bank name" icon="building" value={form.bankName} onChange={update("bankName")} placeholder="e.g. Chase" autoComplete="off" />
+          <Field label="Account number" icon="lock" type="password" value={form.accountNumber} onChange={update("accountNumber")} placeholder="Account number" autoComplete="new-password" />
+          <Field label="Routing number" icon="lock" type="password" value={form.routingNumber} onChange={update("routingNumber")} placeholder="Routing number" autoComplete="new-password" />
         </div>
         {error && <p className="text-sm text-red-600 mt-4 flex items-center gap-1.5"><Icon name="alert" size={14} />{error}</p>}
         <PrimaryButton onClick={submit} className={`mt-6 ${!canSubmit ? "opacity-50 pointer-events-none" : ""}`}>
