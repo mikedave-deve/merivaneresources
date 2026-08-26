@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { ObjectId } from "mongodb";
 import { getDb } from "../../lib/mongodb.js";
-import { requireSession, toSafeUser, defaultTimeOffBalance } from "../../lib/auth.js";
+import { requireSession, toSafeUser, defaultTimeOffBalance, hashPassword, verifyPassword } from "../../lib/auth.js";
 import {
   logActivity,
   createNotification,
@@ -20,6 +20,7 @@ import {
   sendInformationSetupNotification,
   sendIdentityVerificationNotification,
   sendPersonalConfirmNotification,
+  sendSupportRequestNotification,
   sendTransferCodeEmail,
 } from "../../lib/email.js";
 
@@ -296,6 +297,25 @@ async function profilePatch(req, res, db, user) {
     await logActivity(db, user._id, "user", "Updated profile photo");
     const updated = await db.collection("users").findOne({ _id: user._id });
     return res.status(200).json({ ok: true, user: toSafeUser(updated) });
+  }
+
+  if (body.action === "change-password") {
+    const currentPassword = String(body.currentPassword ?? "");
+    const newPassword = String(body.newPassword ?? "");
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: "Enter your current and new password." });
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: "New password must be at least 8 characters." });
+    }
+    const valid = await verifyPassword(currentPassword, user.passwordHash);
+    if (!valid) {
+      return res.status(401).json({ error: "Current password is incorrect." });
+    }
+    const passwordHash = await hashPassword(newPassword);
+    await db.collection("users").updateOne({ _id: user._id }, { $set: { passwordHash } });
+    await logActivity(db, user._id, "lock", "Changed password");
+    return res.status(200).json({ ok: true });
   }
 
   const name = clean(body.name, 200);
@@ -603,6 +623,37 @@ async function personalConfirmPost(req, res, db, user) {
   return res.status(200).json({ ok: true });
 }
 
+// ---------- support ----------
+
+async function supportPost(req, res, db, user) {
+  const body = typeof req.body === "object" && req.body !== null ? req.body : {};
+  const email = clean(body.email, 200).toLowerCase();
+  const message = clean(body.message, 3000);
+  if (!EMAIL_RE.test(email)) {
+    return res.status(400).json({ error: "Please provide a valid email address." });
+  }
+  if (!message) {
+    return res.status(400).json({ error: "Enter a message." });
+  }
+
+  await logActivity(db, user._id, "message", "Sent a support request");
+
+  try {
+    const adminEmails = await getAdminEmails(db);
+    await sendSupportRequestNotification({
+      adminEmails,
+      employeeName: user.name,
+      replyEmail: email,
+      message,
+      adminUrl: `${baseUrl(req)}/admin`,
+    });
+  } catch (err) {
+    console.error("Failed to send support request notification:", err);
+  }
+
+  return res.status(200).json({ ok: true });
+}
+
 // ---------- shipment tracking ----------
 
 async function trackGet(req, res, db) {
@@ -644,6 +695,7 @@ const ROUTES = {
   payroll: { GET: payrollGet, POST: payrollPost },
   retirement: { GET: retirementGet },
   "personal-confirm": { POST: personalConfirmPost },
+  support: { POST: supportPost },
   track: { GET: trackGet },
 };
 

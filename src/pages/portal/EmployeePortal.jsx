@@ -84,9 +84,6 @@ export default function EmployeePortal() {
           >
             <Icon name={PORTAL_SUPPORT_NAV.icon} size={16} />{PORTAL_SUPPORT_NAV.label}
           </button>
-          <button onClick={() => navigate("/")} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-linen2/75 hover:bg-white/8 hover:text-white transition-colors">
-            <Icon name="globe" size={16} />Back to website
-          </button>
         </div>
       </aside>
       {sidebarOpen && <div className="fixed inset-0 bg-black/40 z-20 lg:hidden" onClick={() => setSidebarOpen(false)} />}
