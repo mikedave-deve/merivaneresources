@@ -1,11 +1,13 @@
 import { useEffect, useState, useCallback } from "react";
 import Field from "../../components/ui/Field";
 import { PrimaryButton } from "../../components/ui/Buttons";
+import { useToast } from "../../context/ToastContext";
 import { cx } from "../../lib/utils";
 
 const emptySettings = { balance: "", contributionRate: "", employerMatch: "" };
 
 export default function RetirementPanel() {
+  const { notify } = useToast();
   const [employees, setEmployees] = useState([]);
   const [employeeId, setEmployeeId] = useState("");
   const [settings, setSettings] = useState(emptySettings);
@@ -60,6 +62,7 @@ export default function RetirementPanel() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
       setSettings({ balance: data.retirement.balance, contributionRate: data.retirement.contributionRate, employerMatch: data.retirement.employerMatch });
+      notify("Retirement details saved");
     } catch (err) {
       setError(err.message || "Something went wrong.");
     } finally {

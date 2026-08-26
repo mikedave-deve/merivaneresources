@@ -4,6 +4,7 @@ import {
   FileText, MessageSquare, CreditCard, Users, Settings, LogOut, ChevronDown,
   ChevronRight, Download, Calendar, TrendingUp, Award, Globe, Building2, Sparkles,
   Quote, Filter, Heart, Shield, Compass, Loader2, AlertCircle,
+  Package, Truck, PackageCheck,
 } from "lucide-react";
 
 const ICONS = {
@@ -50,6 +51,9 @@ const ICONS = {
   compass: Compass,
   loader: Loader2,
   alert: AlertCircle,
+  package: Package,
+  truck: Truck,
+  packageCheck: PackageCheck,
 };
 
 export default function Icon({ name, size = 18, className = "", strokeWidth = 1.75 }) {

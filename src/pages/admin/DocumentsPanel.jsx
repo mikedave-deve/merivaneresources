@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { upload } from "@vercel/blob/client";
 import Icon from "../../components/Icon";
+import { useToast } from "../../context/ToastContext";
 import { cx } from "../../lib/utils";
 
 function fmtDate(value) {
@@ -8,6 +9,7 @@ function fmtDate(value) {
 }
 
 export default function DocumentsPanel() {
+  const { notify } = useToast();
   const [employees, setEmployees] = useState([]);
   const [employeeId, setEmployeeId] = useState("");
   const [documents, setDocuments] = useState([]);
@@ -60,6 +62,7 @@ export default function DocumentsPanel() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
       setDocuments((list) => [data.document, ...list]);
+      notify("Document uploaded");
     } catch (err) {
       setError(err.message || "Something went wrong.");
     } finally {

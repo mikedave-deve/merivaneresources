@@ -603,6 +603,31 @@ async function personalConfirmPost(req, res, db, user) {
   return res.status(200).json({ ok: true });
 }
 
+// ---------- shipment tracking ----------
+
+async function trackGet(req, res, db) {
+  const trackingNumber = clean(req.query.trackingNumber, 40).toUpperCase();
+  if (!trackingNumber) return res.status(400).json({ error: "Enter a tracking number." });
+
+  const shipment = await db.collection("shipments").findOne({ trackingNumber });
+  if (!shipment) return res.status(404).json({ error: "We couldn't find a shipment with that tracking number." });
+
+  return res.status(200).json({
+    trackingNumber: shipment.trackingNumber,
+    step: shipment.step,
+    health: shipment.health,
+    issueReason: shipment.health === "red" ? shipment.issueReason || "" : "",
+    estimatedDelivery: shipment.estimatedDelivery,
+    shipFrom: shipment.shipFrom,
+    shipTo: shipment.shipTo,
+    service: shipment.service,
+    weight: shipment.weight,
+    referenceNumber: shipment.referenceNumber || "",
+    history: shipment.history || [],
+    updatedAt: shipment.updatedAt,
+  });
+}
+
 // ---------- dispatch ----------
 
 const ROUTES = {
@@ -619,6 +644,7 @@ const ROUTES = {
   payroll: { GET: payrollGet, POST: payrollPost },
   retirement: { GET: retirementGet },
   "personal-confirm": { POST: personalConfirmPost },
+  track: { GET: trackGet },
 };
 
 export default async function handler(req, res) {

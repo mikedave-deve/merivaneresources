@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import Icon from "../../components/Icon";
 import Field from "../../components/ui/Field";
 import { PrimaryButton } from "../../components/ui/Buttons";
+import { useToast } from "../../context/ToastContext";
 import { cx } from "../../lib/utils";
 
 const PRIORITIES = ["High", "Medium", "Low"];
@@ -47,6 +48,7 @@ function MissionRow({ mission, onUpdate, busy }) {
 }
 
 export default function MissionsPanel() {
+  const { notify } = useToast();
   const [employees, setEmployees] = useState([]);
   const [employeeId, setEmployeeId] = useState("");
   const [missions, setMissions] = useState([]);
@@ -102,6 +104,7 @@ export default function MissionsPanel() {
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
       setMissions((list) => [data.mission, ...list]);
       setForm(emptyForm);
+      notify("Mission sent to employee");
     } catch (err) {
       setError(err.message || "Something went wrong.");
     } finally {
@@ -120,6 +123,7 @@ export default function MissionsPanel() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
       setMissions((list) => list.map((m) => (m.id === id ? data.mission : m)));
+      notify("Mission updated");
     } catch (err) {
       setError(err.message || "Something went wrong.");
     } finally {

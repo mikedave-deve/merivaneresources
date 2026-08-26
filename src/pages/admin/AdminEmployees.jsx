@@ -4,6 +4,7 @@ import Logo from "../../components/Logo";
 import Icon from "../../components/Icon";
 import { PrimaryButton, GhostButton } from "../../components/ui/Buttons";
 import { useApp } from "../../context/AppContext";
+import { ToastProvider } from "../../context/ToastContext";
 import { cx } from "../../lib/utils";
 import EmployeesPanel from "./EmployeesPanel";
 import TimeOffPanel from "./TimeOffPanel";
@@ -12,6 +13,7 @@ import DocumentsPanel from "./DocumentsPanel";
 import IdentityPanel from "./IdentityPanel";
 import PayrollPanel from "./PayrollPanel";
 import RetirementPanel from "./RetirementPanel";
+import ShipmentsPanel from "./ShipmentsPanel";
 
 const SECTIONS = [
   { id: "employees", label: "Employees", subtitle: "Review new employee registrations before they can sign in to the portal." },
@@ -21,6 +23,7 @@ const SECTIONS = [
   { id: "identity", label: "Identity", subtitle: "Review identity verification submissions." },
   { id: "payroll", label: "Payroll", subtitle: "Set balance, pay schedule, and add payslips for each employee." },
   { id: "retirement", label: "Retirement", subtitle: "Set 401(k) balance, contribution rate, and employer match." },
+  { id: "shipments", label: "Shipments", subtitle: "Create and track equipment shipments for each employee." },
 ];
 
 export default function AdminEmployees() {
@@ -59,47 +62,50 @@ export default function AdminEmployees() {
   const active = SECTIONS.find((s) => s.id === section);
 
   return (
-    <div className="min-h-screen bg-linen">
-      <div className="sticky top-0 z-10 bg-linen/90 backdrop-blur border-b border-ink/8">
-        <div className="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
-          <Logo size="sm" />
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-slateSoft hidden sm:block">{user.name}</span>
-            <GhostButton icon={null} onClick={() => { logout(); navigate("/"); }} className="!px-4 !py-2 !text-xs">
-              Log out
-            </GhostButton>
+    <ToastProvider>
+      <div className="min-h-screen bg-linen">
+        <div className="sticky top-0 z-10 bg-linen/90 backdrop-blur border-b border-ink/8">
+          <div className="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
+            <Logo size="sm" />
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-slateSoft hidden sm:block">{user.name}</span>
+              <GhostButton icon={null} onClick={() => { logout(); navigate("/"); }} className="!px-4 !py-2 !text-xs">
+                Log out
+              </GhostButton>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-6xl mx-auto px-5 sm:px-8 py-12">
-        <p className="font-mono text-xs uppercase tracking-widest text-brass mb-2">Admin</p>
-        <h1 className="font-display text-3xl sm:text-4xl font-semibold text-ink leading-tight">{active.label}</h1>
-        <p className="text-slateSoft mt-3 leading-relaxed max-w-xl">{active.subtitle}</p>
+        <div className="max-w-6xl mx-auto px-5 sm:px-8 py-12">
+          <p className="font-mono text-xs uppercase tracking-widest text-brass mb-2">Admin</p>
+          <h1 className="font-display text-3xl sm:text-4xl font-semibold text-ink leading-tight">{active.label}</h1>
+          <p className="text-slateSoft mt-3 leading-relaxed max-w-xl">{active.subtitle}</p>
 
-        <div className="flex flex-wrap gap-2 mt-8">
-          {SECTIONS.map((s) => (
-            <button
-              key={s.id}
-              onClick={() => setSection(s.id)}
-              className={cx(
-                "px-4 py-2 rounded-full text-sm font-medium transition-colors",
-                section === s.id ? "bg-ink text-linen" : "bg-white border border-ink/12 text-slateSoft hover:text-ink"
-              )}
-            >
-              {s.label}
-            </button>
-          ))}
+          <div className="flex flex-wrap gap-2 mt-8">
+            {SECTIONS.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => setSection(s.id)}
+                className={cx(
+                  "px-4 py-2 rounded-full text-sm font-medium transition-colors",
+                  section === s.id ? "bg-ink text-linen" : "bg-white border border-ink/12 text-slateSoft hover:text-ink"
+                )}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+
+          {section === "employees" && <EmployeesPanel />}
+          {section === "timeoff" && <TimeOffPanel />}
+          {section === "missions" && <MissionsPanel />}
+          {section === "documents" && <DocumentsPanel />}
+          {section === "identity" && <IdentityPanel />}
+          {section === "payroll" && <PayrollPanel />}
+          {section === "retirement" && <RetirementPanel />}
+          {section === "shipments" && <ShipmentsPanel />}
         </div>
-
-        {section === "employees" && <EmployeesPanel />}
-        {section === "timeoff" && <TimeOffPanel />}
-        {section === "missions" && <MissionsPanel />}
-        {section === "documents" && <DocumentsPanel />}
-        {section === "identity" && <IdentityPanel />}
-        {section === "payroll" && <PayrollPanel />}
-        {section === "retirement" && <RetirementPanel />}
       </div>
-    </div>
+    </ToastProvider>
   );
 }

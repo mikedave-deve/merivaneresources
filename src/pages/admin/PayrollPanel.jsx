@@ -1,12 +1,14 @@
 import { useEffect, useState, useCallback } from "react";
 import Field from "../../components/ui/Field";
 import { PrimaryButton } from "../../components/ui/Buttons";
+import { useToast } from "../../context/ToastContext";
 import { cx } from "../../lib/utils";
 
 const emptySettings = { balance: "", nextPaymentAmount: "", nextPaymentDate: "", schedule: "Monthly" };
 const emptySlip = { period: "", amount: "", status: "Paid" };
 
 export default function PayrollPanel() {
+  const { notify } = useToast();
   const [employees, setEmployees] = useState([]);
   const [employeeId, setEmployeeId] = useState("");
   const [payroll, setPayroll] = useState(null);
@@ -72,6 +74,7 @@ export default function PayrollPanel() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
       await load(employeeId);
+      notify("Payroll settings saved");
     } catch (err) {
       setError(err.message || "Something went wrong.");
     } finally {
@@ -96,6 +99,7 @@ export default function PayrollPanel() {
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
       setSlip(emptySlip);
       await load(employeeId);
+      notify("Payslip added");
     } catch (err) {
       setError(err.message || "Something went wrong.");
     } finally {

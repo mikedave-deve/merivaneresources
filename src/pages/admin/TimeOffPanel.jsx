@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Icon from "../../components/Icon";
 import { PrimaryButton, GhostButton } from "../../components/ui/Buttons";
+import { useToast } from "../../context/ToastContext";
 import { cx } from "../../lib/utils";
 
 const TABS = [
@@ -44,6 +45,7 @@ function RequestCard({ request, onDecision, busy }) {
 }
 
 export default function TimeOffPanel() {
+  const { notify } = useToast();
   const [tab, setTab] = useState("pending");
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -78,6 +80,7 @@ export default function TimeOffPanel() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
       setRequests((list) => list.filter((r) => r.id !== id));
+      notify(action === "approve" ? "Time off approved" : "Time off denied", action === "approve" ? "success" : "info");
     } catch (err) {
       setError(err.message || "Something went wrong.");
     } finally {

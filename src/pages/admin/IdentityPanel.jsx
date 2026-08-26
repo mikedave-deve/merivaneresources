@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Icon from "../../components/Icon";
 import { PrimaryButton, GhostButton } from "../../components/ui/Buttons";
+import { useToast } from "../../context/ToastContext";
 import { cx } from "../../lib/utils";
 
 const TABS = [
@@ -15,6 +16,7 @@ function fmtDate(value) {
 }
 
 export default function IdentityPanel() {
+  const { notify } = useToast();
   const [tab, setTab] = useState("unverified");
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,6 +51,7 @@ export default function IdentityPanel() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
       await load(tab);
+      notify(action === "verify" ? "Identity marked verified" : "Identity marked unverified", action === "verify" ? "success" : "info");
     } catch (err) {
       setError(err.message || "Something went wrong.");
     } finally {

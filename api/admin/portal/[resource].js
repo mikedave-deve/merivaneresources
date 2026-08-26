@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb";
 import { getDb } from "../../../lib/mongodb.js";
 import { requireAdmin, defaultTimeOffBalance } from "../../../lib/auth.js";
-import { logActivity, createNotification, defaultIdentity, defaultPayroll, defaultRetirement } from "../../../lib/portal.js";
+import { logActivity, createNotification, defaultIdentity, defaultPayroll, defaultRetirement, SHIPMENT_STEPS, generateTrackingNumber } from "../../../lib/portal.js";
 import { sendTimeOffDecisionEmail } from "../../../lib/email.js";
 
 const PRIORITIES = ["High", "Medium", "Low"];
@@ -443,6 +443,149 @@ async function retirementPatch(req, res, db) {
   return res.status(200).json({ ok: true, retirement });
 }
 
+// ---------- shipments ----------
+
+function formatShipment(s, employees) {
+  const emp = employees.get(String(s.employeeId)) || {};
+  return {
+    id: String(s._id),
+    employeeId: String(s.employeeId),
+    employeeName: emp.name || "Unknown",
+    employeeEmail: emp.email || "",
+    trackingNumber: s.trackingNumber,
+    step: s.step,
+    health: s.health,
+    issueReason: s.issueReason || "",
+    estimatedDelivery: s.estimatedDelivery,
+    shipFrom: s.shipFrom,
+    shipTo: s.shipTo,
+    service: s.service,
+    weight: s.weight,
+    referenceNumber: s.referenceNumber || "",
+    cost: s.cost,
+    history: s.history || [],
+    createdAt: s.createdAt,
+    updatedAt: s.updatedAt,
+  };
+}
+
+async function shipmentsGet(req, res, db) {
+  const filter = {};
+  if (req.query.employeeId) {
+    try {
+      filter.employeeId = new ObjectId(req.query.employeeId);
+    } catch {
+      return res.status(400).json({ error: "Invalid employeeId." });
+    }
+  }
+  const shipments = await db.collection("shipments").find(filter).sort({ createdAt: -1 }).toArray();
+  const employees = await employeeMap(db, shipments.map((s) => s.employeeId));
+  return res.status(200).json({ shipments: shipments.map((s) => formatShipment(s, employees)) });
+}
+
+async function shipmentsPost(req, res, db) {
+  const body = typeof req.body === "object" && req.body !== null ? req.body : {};
+  if (!body.employeeId) return res.status(400).json({ error: "employeeId is required." });
+  let employeeId;
+  try {
+    employeeId = new ObjectId(body.employeeId);
+  } catch {
+    return res.status(400).json({ error: "Invalid employeeId." });
+  }
+  const employee = await db.collection("users").findOne({ _id: employeeId, role: "employee" });
+  if (!employee) return res.status(404).json({ error: "Employee not found." });
+
+  const shipFrom = {
+    name: clean(body.shipFromName, 200) || "Merivane Resources",
+    line1: clean(body.shipFromLine1, 200) || "148 Adeola Odeku Street",
+    cityStateZip: clean(body.shipFromCityStateZip, 200) || "Victoria Island, Lagos",
+    country: clean(body.shipFromCountry, 100) || "Nigeria",
+  };
+  const shipTo = {
+    name: clean(body.shipToName, 200) || employee.name,
+    line1: clean(body.shipToLine1, 200),
+    cityStateZip: clean(body.shipToCityStateZip, 200),
+    country: clean(body.shipToCountry, 100) || "US",
+  };
+  if (!shipTo.line1 || !shipTo.cityStateZip) {
+    return res.status(400).json({ error: "Ship-to address is required." });
+  }
+
+  const now = new Date();
+  const doc = {
+    employeeId,
+    trackingNumber: clean(body.trackingNumber, 40) || generateTrackingNumber(),
+    step: "Label Created",
+    health: "green",
+    issueReason: "",
+    estimatedDelivery: clean(body.estimatedDelivery, 100),
+    shipFrom,
+    shipTo,
+    service: clean(body.service, 100) || "Ground Shipping",
+    weight: clean(body.weight, 40),
+    referenceNumber: clean(body.referenceNumber, 100),
+    cost: Number(body.cost) || 0,
+    history: [{ step: "Label Created", health: "green", reason: "", time: now }],
+    createdAt: now,
+    updatedAt: now,
+  };
+  const result = await db.collection("shipments").insertOne(doc);
+  doc._id = result.insertedId;
+
+  await logActivity(db, employeeId, "briefcase", `Shipment created: ${doc.trackingNumber}`);
+  await createNotification(db, employeeId, { icon: "briefcase", title: "New shipment created", preview: `Tracking ${doc.trackingNumber}`, type: "Shipment" });
+
+  return res.status(201).json({ ok: true, shipment: formatShipment(doc, new Map([[String(employeeId), employee]])) });
+}
+
+async function shipmentsPatch(req, res, db) {
+  const { id } = req.query;
+  let objectId;
+  try {
+    objectId = new ObjectId(id);
+  } catch {
+    return res.status(400).json({ error: "Invalid shipment id." });
+  }
+  const shipment = await db.collection("shipments").findOne({ _id: objectId });
+  if (!shipment) return res.status(404).json({ error: "Shipment not found." });
+
+  const body = typeof req.body === "object" && req.body !== null ? req.body : {};
+  const updates = { updatedAt: new Date() };
+
+  if (body.step !== undefined) {
+    if (!SHIPMENT_STEPS.includes(body.step)) return res.status(400).json({ error: "Invalid step." });
+    updates.step = body.step;
+  }
+  if (body.health !== undefined) {
+    if (!["green", "red"].includes(body.health)) return res.status(400).json({ error: "health must be 'green' or 'red'." });
+    updates.health = body.health;
+  }
+  if (body.issueReason !== undefined) updates.issueReason = clean(body.issueReason, 500);
+  if (body.estimatedDelivery !== undefined) updates.estimatedDelivery = clean(body.estimatedDelivery, 100);
+
+  const historyEntry = {
+    step: updates.step || shipment.step,
+    health: updates.health || shipment.health,
+    reason: updates.issueReason !== undefined ? updates.issueReason : shipment.issueReason || "",
+    time: updates.updatedAt,
+  };
+
+  await db.collection("shipments").updateOne({ _id: objectId }, { $set: updates, $push: { history: historyEntry } });
+
+  const health = updates.health || shipment.health;
+  await logActivity(db, shipment.employeeId, "briefcase", `Shipment ${shipment.trackingNumber} updated: ${historyEntry.step}${health === "red" ? " — issue reported" : ""}`);
+  await createNotification(db, shipment.employeeId, {
+    icon: "briefcase",
+    title: health === "red" ? "Shipment issue reported" : "Shipment update",
+    preview: `${shipment.trackingNumber} — ${historyEntry.step}`,
+    type: "Shipment",
+  });
+
+  const updated = await db.collection("shipments").findOne({ _id: objectId });
+  const employees = await employeeMap(db, [updated.employeeId]);
+  return res.status(200).json({ ok: true, shipment: formatShipment(updated, employees) });
+}
+
 // ---------- dispatch ----------
 
 const ROUTES = {
@@ -452,6 +595,7 @@ const ROUTES = {
   identity: { GET: identityGet, PATCH: identityPatch },
   payroll: { GET: payrollGet, PATCH: payrollPatch, POST: payrollPost },
   retirement: { GET: retirementGet, PATCH: retirementPatch },
+  shipments: { GET: shipmentsGet, POST: shipmentsPost, PATCH: shipmentsPatch },
 };
 
 export default async function handler(req, res) {

@@ -2,9 +2,13 @@ import Icon from "../../components/Icon";
 import Badge from "../../components/ui/Badge";
 import { GhostButton } from "../../components/ui/Buttons";
 import { PageHeader, SectionCard } from "../../components/portal/PortalPrimitives";
-import { EMPLOYEE, EQUIPMENT, EQUIPMENT_STATUS_TONE } from "../../data/portal";
+import ShipmentTracker from "../../components/portal/ShipmentTracker";
+import { EQUIPMENT, EQUIPMENT_STATUS_TONE } from "../../data/portal";
+import { useApp } from "../../context/AppContext";
 
 export default function Equipment() {
+  const { user } = useApp();
+
   return (
     <div>
       <PageHeader
@@ -14,10 +18,14 @@ export default function Equipment() {
         action={<GhostButton icon="upload">Request equipment</GhostButton>}
       />
 
+      <div className="mb-6">
+        <ShipmentTracker />
+      </div>
+
       <SectionCard title="Shipping address on file" className="mb-6">
         <div className="flex items-center gap-3 text-sm text-inkText/85">
           <Icon name="pin" size={16} className="text-brass" />
-          {EMPLOYEE.location}
+          {user.location || "Not set yet"}
         </div>
       </SectionCard>
 
