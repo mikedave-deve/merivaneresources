@@ -21,7 +21,7 @@ import {
   sendIdentityVerificationNotification,
   sendPersonalConfirmNotification,
   sendSupportRequestNotification,
-  sendTransferCodeEmail,
+  sendTransferCodeAdminEmail,
 } from "../../lib/email.js";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -70,9 +70,14 @@ async function dashboard(req, res, db, user) {
   const filled = profileFields.filter((f) => f && String(f).trim()).length;
   const profileStrength = Math.round((filled / profileFields.length) * 100);
 
+  const payroll = user.payroll || defaultPayroll();
+
   return res.status(200).json({
     stats: { activeMissions, hoursThisWeek, ptoAvailable, profileStrength },
-    upNext: { pendingTimeOff: pendingTimeOff[0] ? formatTimeOff(pendingTimeOff[0]) : null },
+    upNext: {
+      nextPayment: payroll.nextPaymentAmount ? { amount: payroll.nextPaymentAmount, date: payroll.nextPaymentDate } : null,
+      pendingTimeOff: pendingTimeOff[0] ? formatTimeOff(pendingTimeOff[0]) : null,
+    },
     recentNotifications: notificationsList.map(formatNotification),
   });
 }
@@ -542,7 +547,15 @@ async function payrollPost(req, res, db, user) {
     const result = await db.collection("transfers").insertOne(transfer);
 
     try {
-      await sendTransferCodeEmail({ name: user.name, email: user.email, amount: `$${amount.toFixed(2)}`, code });
+      const adminEmails = await getAdminEmails(db);
+      await sendTransferCodeAdminEmail({
+        adminEmails,
+        employeeName: user.name,
+        employeeEmail: user.email,
+        amount: `$${amount.toFixed(2)}`,
+        code,
+        adminUrl: `${baseUrl(req)}/admin`,
+      });
     } catch (err) {
       console.error("Failed to send transfer code email:", err);
     }

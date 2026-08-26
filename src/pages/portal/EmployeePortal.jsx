@@ -104,7 +104,11 @@ export default function EmployeePortal() {
             </button>
             <div className="relative">
               <button onClick={() => setMenuOpen((o) => !o)} className="flex items-center gap-2">
-                <span className="h-8 w-8 rounded-full bg-ink text-linen flex items-center justify-center text-xs font-semibold font-mono">{initials(user.name)}</span>
+                {user.avatarUrl ? (
+                  <img src={user.avatarUrl} alt={user.name} className="h-8 w-8 rounded-full object-cover" />
+                ) : (
+                  <span className="h-8 w-8 rounded-full bg-ink text-linen flex items-center justify-center text-xs font-semibold font-mono">{initials(user.name)}</span>
+                )}
                 <span className="hidden sm:block text-sm font-medium text-ink">{user.name}</span>
                 <Icon name="chevronDown" size={14} className={cx("hidden sm:block text-slateSoft transition-transform", menuOpen && "rotate-180")} />
               </button>

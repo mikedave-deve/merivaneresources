@@ -231,7 +231,7 @@ export default function Payroll() {
           <div className="bg-white rounded-2xl shadow-panel max-w-sm w-full p-6">
             <div className="h-12 w-12 rounded-full bg-brass/10 flex items-center justify-center mb-4"><Icon name="lock" size={20} className="text-brass" /></div>
             <h3 className="font-display text-lg font-semibold text-ink">Enter confirmation code</h3>
-            <p className="text-sm text-slateSoft mt-2">We emailed a 6-digit code to confirm your {money(pendingTransfer.amount)} transfer. Text your admin if you don't receive it.</p>
+            <p className="text-sm text-slateSoft mt-2">Your admin has a 6-digit code to confirm your {money(pendingTransfer.amount)} transfer. Text support to get it, then enter it below.</p>
             <div className="mt-4">
               <Field label="Code" icon="lock" value={code} onChange={(e) => setCode(e.target.value)} placeholder="6-digit code" onKeyDown={(e) => e.key === "Enter" && confirmTransfer()} />
             </div>

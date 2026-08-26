@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Icon from "../../components/Icon";
 import Badge from "../../components/ui/Badge";
 import { RadialProgress, StatCard, SectionCard, ProgressBar } from "../../components/portal/PortalPrimitives";
-import { MISSION_STATUS_TONE, PAYROLL_HISTORY } from "../../data/portal";
+import { MISSION_STATUS_TONE } from "../../data/portal";
 import { useApp } from "../../context/AppContext";
 
 export default function Dashboard() {
@@ -88,7 +88,14 @@ export default function Dashboard() {
           <div className="space-y-4">
             <div className="rounded-xl bg-white/8 border border-white/10 p-4">
               <div className="text-sm font-medium">Next payroll deposit</div>
-              <div className="flex items-center gap-2 text-xs text-brassLight mt-2 font-mono"><Icon name="card" size={12} />{PAYROLL_HISTORY[0].amount} · {PAYROLL_HISTORY[0].period}</div>
+              {upNext.nextPayment ? (
+                <div className="flex items-center gap-2 text-xs text-brassLight mt-2 font-mono">
+                  <Icon name="card" size={12} />${Number(upNext.nextPayment.amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {upNext.nextPayment.date ? ` · ${new Date(`${upNext.nextPayment.date}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}` : ""}
+                </div>
+              ) : (
+                <div className="text-xs text-linen2/70 mt-2">Not scheduled yet</div>
+              )}
             </div>
             <div className="rounded-xl bg-white/8 border border-white/10 p-4">
               <div className="text-sm font-medium">Time off request pending</div>
