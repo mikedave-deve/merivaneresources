@@ -1,3 +1,6 @@
+import hiringManagerPhoto from "../assets/team/hiring-manager.jpg";
+import supervisorPhoto from "../assets/team/supervisor.jpg";
+
 function pex(id) {
   return `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=480&h=360&fit=crop`;
 }
@@ -5,8 +8,8 @@ function pex(id) {
 export const TEAM = [
   { name: "Elizabeth Hayes", role: "Founder & Chief Executive", blurb: "Sets the vision and keeps Merivane focused on people, not just placements.", img: pex(8560710) },
   { name: "Daniel Whitfield", role: "Co-Founder & COO", blurb: "Runs the day-to-day engine that keeps 100+ roles moving smoothly each week.", img: pex(30692588) },
-  { name: "Malik Jefferson", role: "Hiring Manager", blurb: "Leads final-round interviews and makes the call on every offer Merivane extends.", img: pex(28426646) },
-  { name: "Jasmine Rollins", role: "Supervisor", blurb: "Oversees the recruiting floor day to day, keeping every open req on schedule.", img: pex(29852895) },
+  { name: "Malik Jefferson", role: "Hiring Manager", blurb: "Leads final-round interviews and makes the call on every offer Merivane extends.", img: hiringManagerPhoto },
+  { name: "Andre Whitaker", role: "Supervisor", blurb: "Oversees the recruiting floor day to day, keeping every open req on schedule.", img: supervisorPhoto },
   { name: "Olivia Turner", role: "Head of Talent Partnerships", blurb: "Builds relationships with employers so every open role is one worth applying to.", img: pex(36733305) },
   { name: "Marcus Bennett", role: "Director of Client Success", blurb: "Makes sure companies hiring through Merivane feel supported start to finish.", img: pex(3778603) },
   { name: "Ava Sinclair", role: "Lead Recruiter, Technology", blurb: "Matches engineers and designers with teams that fit how they actually work.", img: pex(15011071) },
