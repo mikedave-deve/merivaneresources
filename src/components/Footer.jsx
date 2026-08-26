@@ -19,7 +19,7 @@ export default function Footer() {
           <div className="mt-6 space-y-2.5 text-sm text-linen2/75">
             <div className="flex items-start gap-2.5">
               <Icon name="pin" size={15} className="text-brassLight mt-0.5 shrink-0" />
-              <span>148 Adeola Odeku Street, Victoria Island, Lagos, Nigeria</span>
+              <span>9600 Great Hills Trail, Suite 300E, Austin, TX 78759</span>
             </div>
             <div className="flex items-center gap-2.5">
               <Icon name="phone" size={15} className="text-brassLight shrink-0" />
@@ -27,7 +27,7 @@ export default function Footer() {
             </div>
             <div className="flex items-center gap-2.5">
               <Icon name="mail" size={15} className="text-brassLight shrink-0" />
-              <span>hello@merivaneresources.com</span>
+              <span>info@merivaneresources.com</span>
             </div>
           </div>
           <div className="flex gap-3 mt-6">

@@ -30,7 +30,7 @@ export default function About() {
       <section className="max-w-4xl mx-auto px-5 sm:px-8 py-20">
         <Reveal>
           <div className="rounded-3xl overflow-hidden shadow-panel mb-14">
-            <img src="https://picsum.photos/seed/merivane-office/1200/600" alt="The first Merivane Resources office" className="w-full h-72 sm:h-96 object-cover" loading="lazy" />
+            <img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1200&h=600&q=80" alt="The Merivane Resources team collaborating remotely" className="w-full h-72 sm:h-96 object-cover" loading="lazy" />
           </div>
         </Reveal>
         <div className="space-y-6 text-inkText/85 leading-relaxed text-[17px]">

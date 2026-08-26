@@ -15,7 +15,7 @@ import { TESTIMONIALS } from "../data/testimonials";
 
 export default function Home() {
   const navigate = useNavigate();
-  const featured = useMemo(() => ALL_JOBS.filter((j) => !j.internal).slice(0, 6), []);
+  const featured = useMemo(() => ALL_JOBS.filter((j) => j.internal).slice(0, 6), []);
 
   return (
     <div>
@@ -42,7 +42,7 @@ export default function Home() {
           </div>
           <div className="relative">
             <div className="rounded-3xl overflow-hidden shadow-panel border border-white/10">
-              <img src="https://picsum.photos/seed/merivane-hero/900/1000" alt="A Merivane candidate working remotely from a home office" className="w-full h-[420px] sm:h-[480px] object-cover" loading="lazy" />
+              <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=900&h=1000&q=80" alt="A Merivane candidate working remotely from a home office" className="w-full h-[420px] sm:h-[480px] object-cover" loading="lazy" />
             </div>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 0.7 }} className="animate-floatSlow absolute -bottom-8 -left-6 sm:-left-10 bg-white text-ink rounded-2xl shadow-panel p-5 w-64">
               <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-moss mb-2"><Icon name="check" size={14} />Match Confirmed</div>
@@ -150,7 +150,7 @@ export default function Home() {
             </div>
             <Reveal delay={0.15}>
               <div className="rounded-3xl overflow-hidden shadow-panel">
-                <img src="https://picsum.photos/seed/merivane-team/900/1100" alt="Merivane recruiter on a video call with a candidate" className="w-full h-[520px] object-cover" loading="lazy" />
+                <img src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=900&h=1100&q=80" alt="Merivane recruiter celebrating a successful placement with a candidate" className="w-full h-[520px] object-cover" loading="lazy" />
               </div>
             </Reveal>
           </div>

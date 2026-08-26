@@ -142,7 +142,7 @@ export function buildShipmentDocumentHtml(shipment, kind) {
       ${!isInvoice ? '<div class="stamp">Paid in full</div>' : ""}
     </div>
     <div class="footer">
-      Merivane Resources · 148 Adeola Odeku Street, Victoria Island, Lagos, Nigeria · hello@merivaneresources.com · +1 (555) 018 2934
+      Merivane Resources · 9600 Great Hills Trail, Suite 300E, Austin, TX 78759 · info@merivaneresources.com · +1 (555) 018 2934
     </div>
   </div>
 </body>

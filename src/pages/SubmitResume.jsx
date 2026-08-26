@@ -125,7 +125,7 @@ export default function SubmitResume() {
         <h1 className="font-display text-3xl sm:text-4xl font-semibold text-ink leading-tight">Submit your resume</h1>
         <p className="text-slateSoft mt-4 leading-relaxed">Tell us about yourself once, and a real recruiter — not a filter — will match you against open roles on the roster.</p>
         <div className="mt-8 rounded-2xl overflow-hidden shadow-card">
-          <img src="https://picsum.photos/seed/merivane-resume/700/500" alt="Candidate preparing an application" className="w-full h-56 object-cover" loading="lazy" />
+          <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=700&h=500&q=80" alt="Candidate preparing an application" className="w-full h-56 object-cover" loading="lazy" />
         </div>
         <div className="mt-6 space-y-3 text-sm text-slateSoft">
           <div className="flex items-center gap-2"><Icon name="check" size={14} className="text-moss" />No cost to candidates, ever</div>

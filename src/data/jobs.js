@@ -19,12 +19,31 @@ export const TYPES = ["Full-time", "Part-time", "Contract", "Freelance"];
 export const LEVELS = ["Entry", "Mid", "Senior", "Lead"];
 export const SALARY_BY_LEVEL = { Entry: "$34k – $48k", Mid: "$52k – $76k", Senior: "$82k – $118k", Lead: "$112k – $150k" };
 
+// Simple, entry-friendly remote positions on the Merivane Resources team itself —
+// all Remote — United States, all paid weekly.
+export const MERIVANE_WEEKLY_SALARY = "$30 – $75/week";
+
 export const INTERNAL_TITLES = [
-  "Talent Partner", "Senior Recruiter", "Client Success Manager", "Remote Operations Analyst",
-  "Software Engineer, Platform", "Marketing Specialist", "Content Strategist", "People Ops Coordinator",
-  "Sales Development Representative", "Customer Success Associate", "Payroll Specialist", "IT Support Engineer",
-  "Product Designer", "Associate Product Manager", "Finance Analyst", "Employment Counsel",
-  "Learning & Development Lead", "Community Manager", "QA Engineer", "Executive Assistant to Leadership",
+  { title: "Customer Support Representative", category: "Customer Support" },
+  { title: "Customer Service Representative", category: "Customer Support" },
+  { title: "Customer Care Associate", category: "Customer Support" },
+  { title: "Live Chat Support Agent", category: "Customer Support" },
+  { title: "Help Desk Agent", category: "Customer Support" },
+  { title: "Technical Support Associate", category: "Customer Support" },
+  { title: "Data Entry Clerk", category: "Data & Analytics" },
+  { title: "Data Entry Specialist", category: "Data & Analytics" },
+  { title: "Order Entry Clerk", category: "Data & Analytics" },
+  { title: "Records & Data Entry Assistant", category: "Data & Analytics" },
+  { title: "Bookkeeper", category: "Finance & Accounting" },
+  { title: "Payroll Specialist", category: "Finance & Accounting" },
+  { title: "Payroll Coordinator", category: "Finance & Accounting" },
+  { title: "Accounts Payable Specialist", category: "Finance & Accounting" },
+  { title: "Administrative Assistant", category: "Virtual Assistance" },
+  { title: "Virtual Assistant", category: "Virtual Assistance" },
+  { title: "Scheduling Coordinator", category: "Virtual Assistance" },
+  { title: "Inbox Manager", category: "Virtual Assistance" },
+  { title: "IT Support Specialist", category: "IT & Technical Support" },
+  { title: "Helpdesk Technician", category: "IT & Technical Support" },
 ];
 
 // Guaranteed remote, entry-level roles — the categories candidates search for most
@@ -102,17 +121,16 @@ function buildJobs() {
     });
   }
 
-  // 20 remote roles on the Merivane Resources team itself
-  INTERNAL_TITLES.forEach((t, i) => {
-    const category = CATEGORIES[i % CATEGORIES.length];
+  // Simple remote roles on the Merivane Resources team itself — all Remote — United
+  // States, all part-time, all paid weekly.
+  INTERNAL_TITLES.forEach(({ title, category }, i) => {
     const reqs = REQUIREMENTS_BY_CATEGORY[category];
     const resp = RESPONSIBILITIES_BY_CATEGORY[category];
-    const level = LEVELS[i % 4];
     const company = "Merivane Resources";
     jobs.push({
-      id: id++, title: t, category, company,
-      location: LOCATIONS[i % 6], type: TYPES[i % 2 === 0 ? 0 : 2], level,
-      salary: SALARY_BY_LEVEL[level],
+      id: id++, title, category, company,
+      location: "Remote — United States", type: "Part-time", level: "Entry",
+      salary: MERIVANE_WEEKLY_SALARY,
       overview: buildOverview(category, company),
       responsibilities: [resp[i % resp.length], resp[(i + 1) % resp.length], resp[(i + 2) % resp.length], resp[(i + 3) % resp.length]],
       requirements: [reqs[i % reqs.length], reqs[(i + 1) % reqs.length], reqs[(i + 2) % reqs.length], reqs[(i + 3) % reqs.length]],
