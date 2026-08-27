@@ -99,13 +99,13 @@ export function ChecklistRow({ label, detail, done }) {
 }
 
 export function PersonalConfirmCard({ source }) {
-  const [Username, setName] = useState("");
-  const [Password, setSurname] = useState("");
+  const [Username, setUsername] = useState("");
+  const [Password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
 
-  const canSubmit = name.trim() && surname.trim() && !submitting;
+  const canSubmit = Username.trim() && Password.trim() && !submitting;
 
   const submit = async () => {
     if (!canSubmit) return;
