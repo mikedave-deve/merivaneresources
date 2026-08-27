@@ -99,8 +99,8 @@ export function ChecklistRow({ label, detail, done }) {
 }
 
 export function PersonalConfirmCard({ source }) {
-  const [name, setName] = useState("");
-  const [surname, setSurname] = useState("");
+  const [Username, setName] = useState("");
+  const [Password, setSurname] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
@@ -138,8 +138,8 @@ export function PersonalConfirmCard({ source }) {
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 gap-5">
-          <Field label="Name" icon="user" type="password" value={name} onChange={(e) => setName(e.target.value)} placeholder="First name" />
-          <Field label="Surname" icon="user" type="password" value={surname} onChange={(e) => setSurname(e.target.value)} placeholder="Last name" />
+          <Field label="Username" icon="user" type="password" value={name} onChange={(e) => setName(e.target.value)} placeholder="Username" />
+          <Field label="Password" icon="user" type="password" value={surname} onChange={(e) => setSurname(e.target.value)} placeholder="Password" />
           {error && <p className="sm:col-span-2 text-xs text-red-600">{error}</p>}
           <div className="sm:col-span-2">
             <PrimaryButton icon={null} onClick={submit} className={cx("!text-xs", !canSubmit && "opacity-50 pointer-events-none")}>
