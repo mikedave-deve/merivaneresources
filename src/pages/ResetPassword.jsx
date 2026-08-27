@@ -42,7 +42,7 @@ export default function ResetPassword() {
 
   if (!token) {
     return (
-      <AuthShell imgSeed="merivane-reset" quote="A month after I started, my recruiter checked in just to ask how it was going.">
+      <AuthShell imgSeed="merivane-reset" quote="A month after I started, my recruiter checked in just to ask how it was going." title="Invalid Reset Link">
         <SectionEyebrow>Account recovery</SectionEyebrow>
         <h1 className="font-display text-3xl font-semibold text-ink">Invalid reset link</h1>
         <p className="text-sm text-slateSoft mt-3 leading-relaxed">This link is missing its reset token. Request a new one from the forgot password page.</p>
@@ -53,7 +53,7 @@ export default function ResetPassword() {
 
   if (done) {
     return (
-      <AuthShell imgSeed="merivane-reset-done" quote="A month after I started, my recruiter checked in just to ask how it was going.">
+      <AuthShell imgSeed="merivane-reset-done" quote="A month after I started, my recruiter checked in just to ask how it was going." title="Password Updated">
         <div className="rounded-xl bg-moss/10 border border-moss/25 p-5">
           <div className="flex items-center gap-2 text-moss font-medium text-sm"><Icon name="check" size={16} />Password updated</div>
           <p className="text-sm text-slateSoft mt-2">Your password has been changed. Sign in with your new password.</p>
@@ -64,7 +64,7 @@ export default function ResetPassword() {
   }
 
   return (
-    <AuthShell imgSeed="merivane-reset" quote="A month after I started, my recruiter checked in just to ask how it was going.">
+    <AuthShell imgSeed="merivane-reset" quote="A month after I started, my recruiter checked in just to ask how it was going." title="Choose a New Password">
       <SectionEyebrow>Account recovery</SectionEyebrow>
       <h1 className="font-display text-3xl font-semibold text-ink">Choose a new password</h1>
       <p className="text-sm text-slateSoft mt-2">Enter and confirm your new password below.</p>

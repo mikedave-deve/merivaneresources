@@ -1,11 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import Icon from "./Icon";
 import Logo from "./Logo";
+import Seo from "./Seo";
 
-export default function AuthShell({ children, imgSeed, quote }) {
+export default function AuthShell({ children, imgSeed, quote, title }) {
   const navigate = useNavigate();
   return (
     <div className="min-h-screen grid lg:grid-cols-2 relative">
+      {title && <Seo title={title} noindex />}
       <button
         onClick={() => navigate("/")}
         aria-label="Go to Merivane Resources home"

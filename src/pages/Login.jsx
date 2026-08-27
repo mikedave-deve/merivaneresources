@@ -30,7 +30,7 @@ export default function Login() {
   };
 
   return (
-    <AuthShell imgSeed="merivane-login" quote="Applied to fifty jobs, heard back from one — Merivane. That was the whole difference.">
+    <AuthShell imgSeed="merivane-login" quote="Applied to fifty jobs, heard back from one — Merivane. That was the whole difference." title="Employee Sign In">
       <SectionEyebrow>Employee portal</SectionEyebrow>
       <h1 className="font-display text-3xl font-semibold text-ink">Welcome back</h1>
       <p className="text-sm text-slateSoft mt-2">Sign in to track applications and manage your profile.</p>

@@ -41,7 +41,7 @@ export default function Register() {
 
   if (result) {
     return (
-      <AuthShell imgSeed="merivane-register-pending" quote="Salary range was posted before I even applied. No games. That alone made me trust the process.">
+      <AuthShell imgSeed="merivane-register-pending" quote="Salary range was posted before I even applied. No games. That alone made me trust the process." title="Account Created">
         <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 200, damping: 14 }} className="h-14 w-14 rounded-full bg-brass/10 flex items-center justify-center mb-6">
           <Icon name="clock" size={24} className="text-brass" />
         </motion.div>
@@ -56,7 +56,7 @@ export default function Register() {
   }
 
   return (
-    <AuthShell imgSeed="merivane-register" quote="Salary range was posted before I even applied. No games. That alone made me trust the process.">
+    <AuthShell imgSeed="merivane-register" quote="Salary range was posted before I even applied. No games. That alone made me trust the process." title="Create Account">
       <SectionEyebrow>Create your profile</SectionEyebrow>
       <h1 className="font-display text-3xl font-semibold text-ink">Join the roster</h1>
       <p className="text-sm text-slateSoft mt-2">Set up your employee account in under two minutes.</p>

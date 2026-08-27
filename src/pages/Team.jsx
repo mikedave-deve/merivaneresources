@@ -1,11 +1,17 @@
 import Icon from "../components/Icon";
 import Reveal from "../components/ui/Reveal";
 import SectionEyebrow from "../components/ui/SectionEyebrow";
+import Seo from "../components/Seo";
 import { TEAM } from "../data/team";
 
 export default function Team() {
   return (
     <div>
+      <Seo
+        title="Meet the Team"
+        description="Meet the recruiters and specialists behind Merivane Resources — a small, senior team spread across five time zones, working your applications personally."
+        path="/team"
+      />
       <section className="bg-ink text-linen">
         <div className="max-w-5xl mx-auto px-5 sm:px-8 pt-16 pb-16 text-center">
           <SectionEyebrow>The people behind the roster</SectionEyebrow>

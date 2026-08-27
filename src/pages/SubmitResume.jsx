@@ -5,6 +5,7 @@ import Icon from "../components/Icon";
 import Field from "../components/ui/Field";
 import { PrimaryButton, GhostButton } from "../components/ui/Buttons";
 import SectionEyebrow from "../components/ui/SectionEyebrow";
+import Seo from "../components/Seo";
 import { useApp } from "../context/AppContext";
 import { cx } from "../lib/utils";
 
@@ -99,6 +100,7 @@ export default function SubmitResume() {
   if (submitted) {
     return (
       <div className="max-w-2xl mx-auto px-5 sm:px-8 py-28 text-center">
+        <Seo title="Submit Your Resume" description="Tell us about yourself once, and a real recruiter will match you against open roles on the Merivane Resources roster." path="/submit-resume" />
         <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 200, damping: 14 }} className="h-16 w-16 rounded-full bg-moss/10 flex items-center justify-center mx-auto mb-6">
           <Icon name="check" size={28} className="text-moss" />
         </motion.div>
@@ -120,6 +122,7 @@ export default function SubmitResume() {
 
   return (
     <div className="max-w-5xl mx-auto px-5 sm:px-8 py-16 grid lg:grid-cols-[1fr_1.3fr] gap-14">
+      <Seo title="Submit Your Resume" description="Tell us about yourself once, and a real recruiter will match you against open roles on the Merivane Resources roster. No cost to candidates, ever." path="/submit-resume" />
       <div>
         <SectionEyebrow>Candidate application</SectionEyebrow>
         <h1 className="font-display text-3xl sm:text-4xl font-semibold text-ink leading-tight">Submit your resume</h1>

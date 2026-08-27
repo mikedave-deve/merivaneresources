@@ -3,6 +3,7 @@ import Icon from "../components/Icon";
 import Reveal from "../components/ui/Reveal";
 import SectionEyebrow from "../components/ui/SectionEyebrow";
 import { PrimaryButton } from "../components/ui/Buttons";
+import Seo from "../components/Seo";
 import { VALUES } from "../data/values";
 
 const TIMELINE = [
@@ -19,6 +20,11 @@ export default function About() {
 
   return (
     <div>
+      <Seo
+        title="About Us"
+        description="Merivane Resources started in 2013 as a rebellion against the 'applied, never heard back' experience. Meet the recruiters placing careers, not just candidates, across 38 countries."
+        path="/about"
+      />
       <section className="bg-ink text-linen">
         <div className="max-w-5xl mx-auto px-5 sm:px-8 pt-16 pb-20 text-center">
           <SectionEyebrow>Our story</SectionEyebrow>

@@ -36,7 +36,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <AuthShell imgSeed="merivane-forgot" quote="A month after I started, my recruiter checked in just to ask how it was going.">
+    <AuthShell imgSeed="merivane-forgot" quote="A month after I started, my recruiter checked in just to ask how it was going." title="Reset Your Password">
       <SectionEyebrow>Account recovery</SectionEyebrow>
       <h1 className="font-display text-3xl font-semibold text-ink">Reset your password</h1>
       {sent ? (

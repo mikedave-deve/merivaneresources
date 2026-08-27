@@ -8,6 +8,7 @@ import Marquee from "../components/ui/Marquee";
 import SectionEyebrow from "../components/ui/SectionEyebrow";
 import { PrimaryButton, GhostButton } from "../components/ui/Buttons";
 import JobCard from "../components/JobCard";
+import Seo from "../components/Seo";
 import { ALL_JOBS } from "../data/jobs";
 import { CATEGORIES, CATEGORY_ICON } from "../data/categories";
 import { VALUES } from "../data/values";
@@ -19,6 +20,11 @@ export default function Home() {
 
   return (
     <div>
+      <Seo
+        title="Remote Jobs & Staffing Agency"
+        description="Merivane Resources connects skilled professionals with vetted employers across 38 countries — real recruiters, transparent pay, and remote roles that actually fit your life."
+        path="/"
+      />
       {/* HERO */}
       <section className="relative overflow-hidden bg-ink text-linen">
         <div className="absolute inset-0 grain-bg opacity-40" />

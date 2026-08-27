@@ -11,6 +11,7 @@ import { useApp } from "./context/AppContext";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Jobs from "./pages/Jobs";
+import JobPosting from "./pages/JobPosting";
 import Team from "./pages/Team";
 import SubmitResume from "./pages/SubmitResume";
 import Login from "./pages/Login";
@@ -70,6 +71,7 @@ export default function App() {
               <Route path="/" element={<Home />} />
               <Route path="/about" element={<About />} />
               <Route path="/jobs" element={<Jobs />} />
+              <Route path="/jobs/:id" element={<JobPosting />} />
               <Route path="/team" element={<Team />} />
               <Route path="/submit-resume" element={<SubmitResume />} />
               <Route path="/login" element={<Login />} />

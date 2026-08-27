@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import Icon from "../components/Icon";
 import SectionEyebrow from "../components/ui/SectionEyebrow";
 import JobCard from "../components/JobCard";
+import Seo from "../components/Seo";
 import { ALL_JOBS } from "../data/jobs";
 import { CATEGORIES } from "../data/categories";
 import { cx } from "../lib/utils";
 
 export default function Jobs() {
-  const [q, setQ] = useState("");
+  const [searchParams] = useSearchParams();
+  const [q, setQ] = useState(searchParams.get("search") || "");
   const [category, setCategory] = useState("All");
   const [remoteOnly, setRemoteOnly] = useState(false);
   const [merivaneOnly, setMerivaneOnly] = useState(false);
@@ -31,6 +34,11 @@ export default function Jobs() {
 
   return (
     <div>
+      <Seo
+        title="Browse Remote Jobs"
+        description="Browse 120+ open remote roles, including customer support, data entry, and administrative positions on the Merivane Resources team itself. Apply free, no cost to candidates."
+        path="/jobs"
+      />
       <section className="bg-ink2 text-linen">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 pt-14 pb-12">
           <SectionEyebrow>120 open roles, updated weekly</SectionEyebrow>
