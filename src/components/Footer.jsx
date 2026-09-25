@@ -23,7 +23,7 @@ export default function Footer() {
             </div>
             <div className="flex items-center gap-2.5">
               <Icon name="phone" size={15} className="text-brassLight shrink-0" />
-              <span>+1 (555) 018 2934</span>
+              <span>+1 (234) 322 4395</span>
             </div>
             <div className="flex items-center gap-2.5">
               <Icon name="mail" size={15} className="text-brassLight shrink-0" />
